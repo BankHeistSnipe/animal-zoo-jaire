@@ -1161,7 +1161,8 @@ async function preGenerateZoneAnimals(zoneId) {
   alreadyFound = alreadyFound.filter(function(v,i,arr){ return arr.indexOf(v)===i; });
   var excludeNote = alreadyFound.length > 0 ? ' Do NOT include any of these already-found animals: '+alreadyFound.join(', ')+'.' : '';
 
-  var prompt = 'Generate exactly 8 different real animals all found in the '+zoneNames[zoneId]+' for a zoo discovery game for a 4-year-old. Each animal must be UNIQUE — no repeats.'+excludeNote+' Avoid the most obvious animals (lion, elephant, shark, penguin, polar bear). Pick surprising, lesser-known creatures. For each animal include: name, one emoji, three fun kid-friendly facts (each under 14 words, starting with an emoji), what it eats, and zone id.\n\nRespond ONLY as a valid JSON array of 8 objects, no markdown:\n[{"name":"...","emoji":"...","facts":["emoji fact","emoji fact","emoji fact"],"eats":"...","zone":"'+zoneId+'"},...]';
+  var seed = Math.floor(Math.random()*99999);
+  var prompt = 'Session '+seed+': Generate exactly 8 DIFFERENT surprising real animals found in the '+zoneNames[zoneId]+' for a zoo discovery game for a 4-year-old. Each MUST be unique and different from any previous session.'+excludeNote+' Never use lion, elephant, shark, penguin, polar bear. Mix mammals, birds, reptiles, insects, fish. For each: name, one emoji, three fun facts (each under 14 words, starting with an emoji), what it eats, zone id.\n\nRespond ONLY as a valid JSON array of 8 objects, no markdown:\n[{"name":"...","emoji":"...","facts":["emoji fact","emoji fact","emoji fact"],"eats":"...","zone":"'+zoneId+'"}, ...]';
 
   try {
     var resp = await fetch('https://api.anthropic.com/v1/messages',{
@@ -1257,7 +1258,9 @@ function getFullFallbackPool(zoneId) {
     ]
   };
   var pool = pools[zoneId] || pools['jungle'];
-  return pool.map(function(a, i){
+  // Shuffle pool so fallback animals vary each session
+  var shuffled = pool.slice().sort(function(){ return Math.random() - 0.5; });
+  return shuffled.map(function(a, i){
     return Object.assign({}, a, {
       zone: zoneId,
       id: 'a_'+Date.now()+'_'+i+'_'+Math.random(),
