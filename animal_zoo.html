@@ -634,6 +634,7 @@ function createRoom() {
   var pid='p_'+Date.now();
   var room={code:code,host:myName,explorerName:expName,started:false,players:{},animals:{},zoo:{},lastUpdate:Date.now()};
   room.players[pid]={id:pid,name:myName,role:'host',emoji:'🔭'};
+  zoneSpotAnimals = {}; // fresh animals for new room
   localStorage.setItem('zoo_room_code', code);
   localStorage.setItem('zoo_my_name', myName);
   localStorage.setItem('zoo_my_role', 'host');
@@ -661,6 +662,7 @@ function joinRoom() {
     var u={};
     u['zoo_rooms/'+code+'/players/'+pid]={id:pid,name:myName,role:myRole,emoji:myRole==='explorer'?'👦🏾':'🔭'};
     u['zoo_rooms/'+code+'/lastUpdate']=Date.now();
+    zoneSpotAnimals = {};
     localStorage.setItem('zoo_room_code', code);
     localStorage.setItem('zoo_my_name', name);
     localStorage.setItem('zoo_my_role', myRole);
@@ -2548,6 +2550,7 @@ function resumeSession() {
   if(!savedCode||!savedName){showView('v-choose');return;}
   dbGet('zoo_rooms/'+savedCode,function(room){
     if(!room){showToast('Room not found. Start a new game!');clearResume();return;}
+    zoneSpotAnimals = {}; // regenerate fresh animals on resume
     myRoom=savedCode; myName=savedName; myRole=savedRole; isHost=(savedRole==='host');
     if(room.started){
       collection=room.animals||{}; zoo=room.zoo||{}; zoneSpotAnimals={};
