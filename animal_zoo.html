@@ -1,0 +1,2600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>🦁 Jaire's Animal Discovery Zoo</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background:#0a1a0a;}
+
+/* ZONE BACKGROUNDS */
+.bg{position:fixed;inset:0;z-index:0;transition:background 1.4s ease;}
+.bg-jungle{background:linear-gradient(180deg,#061408 0%,#0e2a0a 40%,#1a4010 70%,#0a1e08 100%);}
+.bg-ocean{background:linear-gradient(180deg,#020818 0%,#041428 40%,#062040 70%,#030e20 100%);}
+.bg-savanna{background:linear-gradient(180deg,#1a0c00 0%,#2e1800 40%,#3a2400 70%,#1e1000 100%);}
+.bg-arctic{background:linear-gradient(180deg,#080c14 0%,#0e1824 40%,#162030 70%,#0a1018 100%);}
+.bg-rainforest{background:linear-gradient(180deg,#040e04 0%,#082010 40%,#0e3018 70%,#061008 100%);}
+.bg-zoo{background:linear-gradient(180deg,#060e06 0%,#0a1a0a 50%,#0e2010 100%);}
+
+/* PARTICLES */
+.particles{position:fixed;inset:0;z-index:1;pointer-events:none;}
+.pt{position:absolute;border-radius:50%;animation:twinkle 3s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.6)}}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* ══ HOME SCREEN ══ */
+#s-home{align-items:center;justify-content:center;padding:2rem 1.5rem;gap:1rem;}
+.home-logo{font-family:'Fredoka One',cursive;font-size:2.4rem;color:#7dde3a;text-align:center;text-shadow:0 0 40px rgba(125,222,58,0.4);line-height:1.1;}
+.home-logo-sub{color:#ffcc00;font-size:1rem;letter-spacing:.15em;display:block;margin-bottom:4px;}
+.home-hero{font-size:5rem;animation:float 3s ease-in-out infinite;display:block;text-align:center;}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+.home-btn{width:100%;padding:1rem 1.5rem;border-radius:18px;border:none;cursor:pointer;font-family:'Fredoka One',cursive;font-size:1.1rem;color:#fff;transition:transform .12s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.home-btn:active{transform:scale(.97);}
+.btn-green{background:linear-gradient(135deg,#2d5a1b,#3d7a26);border:2.5px solid #7dde3a;box-shadow:0 4px 20px rgba(125,222,58,.25);}
+.btn-blue{background:linear-gradient(135deg,#1a2f3a,#1e3a4a);border:2.5px solid #4ab8d4;box-shadow:0 4px 20px rgba(74,184,212,.2);}
+.btn-yellow{background:#ffcc00;color:#1a0a00;border:none;}
+.btn-ghost{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.2);font-size:.9rem;padding:.7rem 1.5rem;}
+.inp{width:100%;padding:.9rem 1.1rem;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.15);border-radius:14px;color:#fff;font-family:'Nunito',sans-serif;font-size:1rem;outline:none;transition:border-color .2s;}
+.inp:focus{border-color:#7dde3a;}
+.inp::placeholder{color:rgba(255,255,255,.25);}
+.code-inp{font-family:'Fredoka One',cursive;font-size:2.5rem;text-align:center;letter-spacing:.4em;}
+.err{color:#ff6b6b;font-size:.8rem;text-align:center;display:none;}
+.room-code-big{font-family:'Fredoka One',cursive;font-size:3.5rem;color:#ffcc00;text-align:center;letter-spacing:.3em;text-shadow:0 0 20px rgba(255,204,0,.5);}
+.code-lbl{font-size:.7rem;color:rgba(125,222,58,.8);text-align:center;letter-spacing:.15em;text-transform:uppercase;}
+.player-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:12px;padding:.65rem .9rem;margin-bottom:7px;}
+.badge{font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:8px;}
+.badge-e{background:rgba(125,222,58,.2);color:#7dde3a;border:1px solid #7dde3a;}
+.badge-h{background:rgba(255,204,0,.2);color:#ffcc00;border:1px solid #ffcc00;}
+.badge-q{background:rgba(74,184,212,.2);color:#4ab8d4;border:1px solid #4ab8d4;}
+.card-y{background:rgba(255,204,0,.07);border:1.5px solid rgba(255,204,0,.3);border-radius:18px;padding:1rem 1.2rem;width:100%;text-align:center;}
+.f1{font-family:'Fredoka One',cursive;}
+
+/* ══ LOBBY VIEWS ══ */
+.view{display:none;width:100%;flex-direction:column;align-items:center;gap:1rem;}
+.view.active{display:flex;}
+
+/* ══ ZONE SCREEN ══ */
+#s-zone{overflow:hidden;}
+.zone-header{padding:.8rem 1.2rem .5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:5;position:relative;}
+.zone-name-el{font-family:'Fredoka One',cursive;font-size:1.2rem;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);}
+.zone-counter{font-family:'Fredoka One',cursive;font-size:.75rem;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:4px 12px;color:rgba(255,255,255,.9);}
+
+/* COLLECTION STRIP */
+.collection-strip{padding:.3rem 1.2rem .5rem;display:flex;align-items:flex-start;gap:8px;flex-shrink:0;z-index:5;overflow-x:auto;min-height:62px;}
+.collection-strip::-webkit-scrollbar{display:none;}
+.coll-label{font-family:'Fredoka One',cursive;font-size:.72rem;color:rgba(255,204,0,.9);white-space:nowrap;}
+.coll-animal{animation:pop .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.coll-empty{font-size:.75rem;color:rgba(255,255,255,.3);font-style:italic;}
+
+/* SCENE AREA */
+.scene-area{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.zone-bg-scene{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}
+.zone-bg-scene svg{width:100%;height:100%;}
+
+/* HIDING SPOTS */
+.hide-spot{position:absolute;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:transform .1s;animation:wiggle-idle 4s ease-in-out infinite;}
+.hide-spot:active{transform:scale(.9);}
+@keyframes wiggle-idle{0%,100%{transform:rotate(-3deg) scale(1)}50%{transform:rotate(3deg) scale(1.05)}}
+.hide-spot.found{pointer-events:none;animation:none;}
+.spot-icon{font-size:2.5rem;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));}
+.spot-glow{position:absolute;inset:-8px;border-radius:50%;animation:spot-pulse 2s ease-in-out infinite;}
+@keyframes spot-pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.7;transform:scale(1.15)}}
+
+/* DISCOVERY OVERLAY */
+.discovery-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.88);display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;gap:1rem;animation:fadeIn .3s ease;}
+.discovery-overlay.active{display:flex;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.disc-animal-big{font-size:7rem;animation:bounce-in .6s cubic-bezier(.34,1.56,.64,1);display:block;text-align:center;}
+@keyframes bounce-in{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
+.disc-wow{font-family:'Fredoka One',cursive;font-size:1.5rem;color:#ffcc00;text-align:center;text-shadow:0 0 20px rgba(255,204,0,.6);}
+.disc-name{font-family:'Fredoka One',cursive;font-size:2rem;color:#fff;text-align:center;}
+.disc-card{background:rgba(255,255,255,.06);border:2px solid rgba(125,222,58,.4);border-radius:20px;padding:1.1rem 1.3rem;width:100%;max-width:340px;}
+.disc-fact{color:#c8e8b0;font-size:.88rem;line-height:1.6;margin-bottom:6px;}
+.disc-fact:last-child{margin-bottom:0;}
+.disc-fact strong{color:#7dde3a;}
+.disc-btns{display:flex;gap:10px;width:100%;max-width:340px;}
+.disc-btn{flex:1;padding:.9rem;border-radius:16px;border:none;cursor:pointer;font-family:'Fredoka One',cursive;font-size:1rem;}
+
+/* ══ ZOO SCREEN ══ */
+#s-zoo{overflow:hidden;}
+.zoo-header{padding:.8rem 1.2rem .5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.zoo-tabs{display:flex;gap:6px;padding:.5rem 1.2rem;flex-shrink:0;}
+.zoo-tab{flex:1;padding:.6rem .3rem;border-radius:12px;border:none;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1);}
+.zoo-tab.active{background:rgba(125,222,58,.15);border-color:#7dde3a;color:#7dde3a;}
+.zoo-content{flex:1;overflow-y:auto;padding:0 1.2rem 1.2rem;}
+
+/* HABITAT GRID */
+.habitat-section{margin-bottom:1.5rem;}
+.habitat-title{font-family:'Fredoka One',cursive;font-size:1rem;margin-bottom:.6rem;display:flex;align-items:center;gap:8px;}
+.habitat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.08);border-radius:16px;padding:.8rem;}
+.grid-cell{aspect-ratio:1;border-radius:10px;border:1.5px dashed rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-size:1.8rem;position:relative;}
+.grid-cell:active{transform:scale(.92);}
+.grid-cell.occupied{border-style:solid;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.05);}
+.grid-cell.empty:active{background:rgba(125,222,58,.1);border-color:#7dde3a;}
+.cell-label{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:.45rem;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px;}
+
+/* COLLECTION GRID */
+.coll-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.coll-card{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:16px;padding:.8rem .6rem;text-align:center;cursor:pointer;transition:all .15s;}
+.coll-card:active{transform:scale(.95);}
+.coll-card.in-zoo{border-color:rgba(125,222,58,.4);background:rgba(125,222,58,.08);}
+.coll-emoji{font-size:2.2rem;display:block;margin-bottom:4px;}
+.coll-name{font-family:'Fredoka One',cursive;font-size:.72rem;color:#fff;line-height:1.2;}
+.coll-zone{font-size:.6rem;color:rgba(255,255,255,.4);margin-top:2px;}
+.coll-badge-zoo{font-size:.55rem;background:rgba(125,222,58,.2);color:#7dde3a;border:1px solid #7dde3a;border-radius:6px;padding:1px 6px;display:inline-block;margin-top:3px;}
+
+/* PLACE PICKER */
+.place-picker{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.88);display:none;flex-direction:column;align-items:center;justify-content:flex-end;padding:1.5rem;}
+.place-picker.active{display:flex;}
+.picker-card{background:linear-gradient(145deg,#0e1e0e,#162816);border:2px solid rgba(125,222,58,.4);border-radius:24px;padding:1.5rem;width:100%;max-width:380px;max-height:70vh;overflow-y:auto;}
+.picker-title{font-family:'Fredoka One',cursive;font-size:1.1rem;color:#7dde3a;margin-bottom:1rem;text-align:center;}
+.picker-habitats{display:flex;flex-direction:column;gap:10px;}
+.picker-habitat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:.8rem;}
+.picker-hab-title{font-family:'Fredoka One',cursive;font-size:.85rem;color:#ffcc00;margin-bottom:8px;}
+.picker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.picker-cell{aspect-ratio:1;border-radius:8px;border:1.5px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.5rem;transition:all .15s;}
+.picker-cell:active{transform:scale(.9);background:rgba(125,222,58,.15);}
+.picker-cell.full{opacity:.3;pointer-events:none;}
+.picker-close{margin-top:1rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:.8rem;font-family:'Fredoka One',cursive;font-size:.95rem;color:#fff;width:100%;cursor:pointer;}
+
+/* ══ HQ SCREEN ══ */
+#s-hq{overflow:hidden;}
+.hq-header{padding:.9rem 1.2rem;background:rgba(74,184,212,.08);border-bottom:1px solid rgba(74,184,212,.2);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.hq-tabs{display:flex;gap:6px;padding:.7rem 1.2rem;flex-shrink:0;}
+.hq-tab{flex:1;padding:.6rem .3rem;border-radius:12px;border:none;font-family:'Nunito',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;transition:all .2s;background:rgba(74,184,212,.05);color:rgba(255,255,255,.4);border:1px solid rgba(74,184,212,.15);}
+.hq-tab.active{background:rgba(74,184,212,.18);border-color:#4ab8d4;color:#4ab8d4;}
+.hq-content{flex:1;overflow-y:auto;padding:0 1.2rem 1.2rem;}
+
+/* LIVE FEED */
+.feed-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1rem;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;animation:slide-in .4s ease;}
+@keyframes slide-in{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+.feed-emoji{font-size:2.5rem;flex-shrink:0;}
+.feed-zone{font-size:.65rem;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+.feed-name{font-family:'Fredoka One',cursive;font-size:1rem;color:#fff;margin:2px 0;}
+.feed-fact{font-size:.8rem;color:#c8e8b0;line-height:1.5;}
+.new-pill{background:#e03030;border-radius:7px;padding:1px 7px;font-size:.6rem;font-weight:800;color:#fff;display:inline-block;margin-left:6px;animation:pulse .8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* HQ ZOO VIEW */
+.hq-zoo-preview{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.hq-hab-card{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);border-radius:16px;padding:.9rem;text-align:center;}
+.hq-hab-icon{font-size:1.8rem;display:block;margin-bottom:4px;}
+.hq-hab-name{font-family:'Fredoka One',cursive;font-size:.82rem;color:#fff;}
+.hq-hab-count{font-size:.7rem;color:rgba(125,222,58,.8);margin-top:2px;}
+.hq-hab-animals{font-size:1.4rem;margin-top:6px;min-height:28px;}
+
+/* ZONE TRANSITION */
+.zone-trans{position:fixed;inset:0;z-index:300;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:0;pointer-events:none;transition:opacity .3s;}
+.zone-trans.active{opacity:1;pointer-events:all;}
+.trans-icon{font-size:5rem;animation:spin-in .5s ease;}
+@keyframes spin-in{from{transform:scale(0) rotate(-180deg)}to{transform:scale(1) rotate(0)}}
+.trans-name{font-family:'Fredoka One',cursive;font-size:2rem;color:#ffcc00;}
+.trans-sub{font-family:'Fredoka One',cursive;font-size:1rem;color:rgba(255,255,255,.6);}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.1);display:flex;padding:.5rem .5rem .8rem;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:.5rem;border:none;background:transparent;cursor:pointer;border-radius:12px;transition:all .15s;}
+.nav-btn.active{background:rgba(125,222,58,.1);}
+.nav-btn:active{transform:scale(.93);}
+.nav-icon{font-size:1.5rem;}
+.nav-label{font-family:'Fredoka One',cursive;font-size:.6rem;color:rgba(255,255,255,.4);}
+.nav-btn.active .nav-label{color:#7dde3a;}
+
+/* TOAST */
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(120px);background:rgba(20,50,16,.95);border:1.5px solid rgba(125,222,58,.5);border-radius:20px;padding:.5rem 1rem;display:flex;align-items:center;gap:7px;z-index:400;max-width:320px;width:auto;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s ease;opacity:0;box-shadow:0 4px 16px rgba(0,0,0,.4);pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast-text{color:#c8e8b0;font-size:.8rem;font-weight:700;white-space:normal;line-height:1.3;}
+
+/* NAMING MODAL + INTERACT MODAL */
+.modal{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.85);display:none;align-items:flex-end;justify-content:center;padding:1.5rem;}
+.modal.active{display:flex;}
+.modal-card{background:linear-gradient(145deg,#0e1e0e,#162816);border:2px solid rgba(125,222,58,.4);border-radius:24px;padding:1.5rem;width:100%;max-width:380px;}
+.modal-title{font-family:'Fredoka One',cursive;font-size:1.1rem;color:#7dde3a;margin-bottom:1rem;text-align:center;}
+.modal-inp{width:100%;padding:.9rem;background:rgba(255,255,255,.07);border:2px solid rgba(125,222,58,.4);border-radius:14px;color:#fff;font-family:'Nunito',sans-serif;font-size:1.1rem;outline:none;text-align:center;}
+.modal-btns{display:flex;gap:8px;margin-top:.8rem;}
+
+/* STATS BAR */
+.stats-bar{padding:.4rem 1.2rem;display:flex;gap:12px;flex-shrink:0;}
+.stat{display:flex;align-items:center;gap:5px;font-family:'Fredoka One',cursive;font-size:.78rem;}
+.stat-val{color:#ffcc00;}
+.stat-lbl{color:rgba(255,255,255,.4);}
+
+/* LOADING */
+.loading-screen{position:fixed;inset:0;z-index:500;background:#0a1a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
+.spinner{width:40px;height:40px;border:4px solid rgba(125,222,58,.2);border-top:4px solid #7dde3a;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Fredoka One',cursive;color:#7dde3a;font-size:1.1rem;}
+
+pb { display: block; padding-bottom: 70px; }
+
+/* BUILD TAB */
+.build-canvas-wrap{position:relative;border-radius:18px;overflow:hidden;border:2px solid rgba(125,222,58,.3);margin-bottom:12px;touch-action:none;}
+.build-canvas{display:grid;gap:2px;padding:6px;background:rgba(0,0,0,.3);}
+.build-cell{border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;transition:transform .08s;user-select:none;-webkit-user-select:none;min-height:44px;}
+.build-cell img{pointer-events:none;-webkit-user-drag:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;}
+.build-cell[draggable="true"]{-webkit-touch-callout:none;touch-action:none;}
+.build-cell:active{transform:scale(.92);}
+.build-palette{display:flex;gap:6px;flex-wrap:wrap;padding:.5rem;background:rgba(0,0,0,.3);border-radius:14px;margin-bottom:10px;}
+.palette-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:.4rem .35rem;border-radius:10px;border:2px solid transparent;cursor:pointer;min-width:44px;transition:all .15s;}
+.palette-item.selected{border-color:#ffcc00;background:rgba(255,204,0,.15);}
+.palette-item:active{transform:scale(.92);}
+.palette-emoji{font-size:1.6rem;line-height:1;}
+.palette-lbl{font-size:.5rem;color:rgba(255,255,255,.6);text-align:center;}
+.build-hab-sel{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:4px;}
+.build-hab-btn{flex-shrink:0;padding:.5rem .9rem;border-radius:12px;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);font-family:'Fredoka One',cursive;font-size:.75rem;color:rgba(255,255,255,.6);cursor:pointer;white-space:nowrap;transition:all .15s;}
+.build-hab-btn.active{background:rgba(125,222,58,.15);border-color:#7dde3a;color:#7dde3a;}
+.build-toolbar{display:flex;gap:6px;margin-bottom:8px;align-items:center;}
+.tool-btn{padding:.5rem .8rem;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);font-size:.75rem;color:rgba(255,255,255,.6);cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;transition:all .15s;}
+.tool-btn.active{background:rgba(255,204,0,.15);border-color:#ffcc00;color:#ffcc00;}
+</style>
+</head>
+<body>
+
+<!-- BACKGROUNDS -->
+<div class="bg bg-zoo" id="mainBg"></div>
+<div class="particles" id="particles"></div>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loadingScreen">
+  <span style="font-size:4rem;animation:float 2s ease-in-out infinite;display:block">🦁</span>
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Loading your zoo...</div>
+</div>
+
+<!-- ══════════════ HOME / LOBBY ══════════════ -->
+<div class="screen" id="s-home" style="overflow-y:auto;">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:2rem 1.5rem;gap:1rem;">
+
+    <div class="view active" id="v-home">
+      <div class="home-logo"><span class="home-logo-sub">🌿 JAIRE'S 🌿</span>Animal Discovery Zoo</div>
+      <span class="home-hero">🦁</span>
+      <p style="color:rgba(255,255,255,.5);font-size:.85rem;text-align:center;">Discover animals, build your zoo, play with family!</p>
+      <div id="resumeSection" style="display:none;width:100%;background:rgba(125,222,58,.08);border:1.5px solid rgba(125,222,58,.3);border-radius:16px;padding:1rem;text-align:center;">
+        <div style="font-family:Fredoka One,cursive;color:#7dde3a;font-size:.9rem;margin-bottom:6px;">🦁 Continue your zoo?</div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.5);margin-bottom:10px;" id="resumeInfo">Room ???? • rejoining as ????</div>
+        <button class="home-btn btn-green" style="margin-bottom:6px;" onclick="resumeSession()">▶️ Resume Zoo!</button>
+        <button class="home-btn btn-ghost" style="font-size:.8rem;padding:.5rem;" onclick="clearResume()">Start Fresh</button>
+      </div>
+      <button class="home-btn btn-green" onclick="showView('v-choose')">🐾 Start New Game</button>
+      <button class="home-btn btn-ghost" onclick="showHow()">❓ How to play</button>
+    </div>
+
+    <div class="view" id="v-choose">
+      <span style="font-size:3rem">🌍</span>
+      <div class="f1" style="font-size:1.6rem;color:#7dde3a;text-align:center;">Join Your Family</div>
+      <button class="home-btn btn-green" onclick="showView('v-create')">🆕 Create New Session</button>
+      <button class="home-btn btn-blue" onclick="showView('v-join')">🔑 Join with Room Code</button>
+      <button class="home-btn btn-ghost" onclick="showView('v-home')">← Back</button>
+    </div>
+
+    <div class="view" id="v-create">
+      <span style="font-size:3rem">🧑‍🔬</span>
+      <div class="f1" style="font-size:1.5rem;color:#7dde3a;text-align:center;">Create a Session</div>
+      <input class="inp" id="createName" placeholder="Your name (e.g. Dad, Mom...)" maxlength="20"/>
+      <input class="inp" id="explorerName" placeholder="Explorer's name (e.g. Jaire)" maxlength="20"/>
+      <button class="home-btn btn-green" onclick="createRoom()">✅ Create Room</button>
+      <button class="home-btn btn-ghost" onclick="showView('v-choose')">← Back</button>
+      <div class="err" id="createErr">Please enter your name</div>
+    </div>
+
+    <div class="view" id="v-join">
+      <span style="font-size:3rem">🗺️</span>
+      <div class="f1" style="font-size:1.5rem;color:#7dde3a;text-align:center;">Join the Zoo</div>
+      <input class="inp code-inp" id="joinCode" maxlength="4" placeholder="CODE" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/>
+      <input class="inp" id="joinName" placeholder="Your name" maxlength="20"/>
+      <button class="home-btn btn-green" onclick="joinRoom()">🚀 Join!</button>
+      <button class="home-btn btn-ghost" onclick="showView('v-choose')">← Back</button>
+      <div class="err" id="joinErr">Room not found!</div>
+    </div>
+
+    <div class="view" id="v-lobby">
+      <div class="code-lbl">SHARE THIS CODE</div>
+      <div class="room-code-big" id="lobbyCode">????</div>
+      <p style="color:rgba(255,255,255,.4);font-size:.75rem;text-align:center;">Open animal-zoo.netlify.app and tap Join</p>
+      <div class="card-y" style="width:100%">
+        <div class="f1" style="color:#ffcc00;font-size:.9rem;margin-bottom:8px;">👥 Players</div>
+        <div id="lobbyPlayers"></div>
+      </div>
+      <button class="home-btn btn-green" id="startBtn" onclick="startSession()" disabled style="opacity:.4;">🦁 Start Discovering!</button>
+      <div style="font-size:.72rem;color:rgba(255,255,255,.35);text-align:center;" id="startHint">Need at least 2 players</div>
+    </div>
+
+    <div class="view" id="v-waiting">
+      <span style="font-size:4rem;animation:float 2s ease-in-out infinite;display:block">⏳</span>
+      <div class="f1" style="font-size:1.4rem;color:#7dde3a;text-align:center;">Waiting for host...</div>
+      <div class="card-y" style="width:100%">
+        <div class="code-lbl">ROOM CODE</div>
+        <div class="room-code-big" id="waitCode">????</div>
+      </div>
+      <div id="waitPlayers" style="width:100%"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ ZONE / DISCOVERY SCREEN ══════════════ -->
+<div class="screen" id="s-zone">
+  <div class="zone-header">
+    <div>
+      <div class="zone-name-el" id="zoneNameEl">🌿 Jungle</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div class="zone-counter" id="zoneCounter">Found: 0</div>
+    </div>
+  </div>
+
+  <div class="collection-strip" id="collStrip">
+    <div class="coll-label">🎒 Collected:</div>
+    <div class="coll-empty" id="collEmpty">Find your first animal!</div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-val" id="totalFound">0</span><span class="stat-lbl">animals found</span></div>
+    <div class="stat"><span class="stat-val" id="totalZoo">0</span><span class="stat-lbl">in zoo</span></div>
+    <div class="stat" style="margin-left:auto;"><span style="font-family:'Fredoka One',cursive;font-size:.72rem;color:rgba(74,184,212,.8);">ROOM <span id="zoneRoomCode">????</span></span></div>
+  </div>
+
+  <div class="scene-area" id="sceneArea">
+    <div class="zone-bg-scene" id="zoneBgScene"></div>
+    <!-- Hiding spots injected here -->
+  </div>
+
+  <pb></pb>
+</div>
+
+<!-- ══════════════ ZOO BUILDER SCREEN ══════════════ -->
+<div class="screen" id="s-zoo">
+  <div class="zoo-header">
+    <div class="f1" style="font-size:1.1rem;color:#7dde3a;">🏛️ My Zoo</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:.75rem;color:rgba(255,204,0,.8);" id="zooRoomCode2">ROOM ????</div>
+  </div>
+  <div class="zoo-tabs">
+    <button class="zoo-tab active" onclick="zooTab('habitats')">🎮 Playtime</button>
+    <button class="zoo-tab" onclick="zooTab('build')">🏗️ Build</button>
+    <button class="zoo-tab" onclick="zooTab('collection')">🎒 Animals</button>
+  </div>
+  <div class="zoo-content" id="zooContent">
+    <div id="zt-habitats">
+      <div id="habitatsContainer"></div>
+    </div>
+    <div id="zt-build" style="display:none;">
+      <div id="buildContainer"></div>
+    </div>
+    <div id="zt-collection" style="display:none;">
+      <div class="coll-grid" id="collGrid"></div>
+      <div id="collEmpty2" style="text-align:center;color:rgba(255,255,255,.3);font-size:.85rem;padding:2rem;">Go discover animals first! 🌿</div>
+    </div>
+  </div>
+  <pb></pb>
+</div>
+
+<!-- ══════════════ HQ SCREEN ══════════════ -->
+<div class="screen" id="s-hq">
+  <div class="hq-header">
+    <div class="f1" style="color:#4ab8d4;font-size:1.1rem;">🔭 Family HQ</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div class="f1" style="font-size:.72rem;color:#ffcc00;" id="hqRoomCode">ROOM ????</div>
+      <button class="home-btn btn-ghost" style="padding:.4rem .8rem;font-size:.72rem;width:auto;" onclick="leaveGame()">✕ Leave</button>
+    </div>
+  </div>
+  <div class="hq-tabs">
+    <button class="hq-tab active" onclick="hqTab('feed')">📡 Live Feed</button>
+    <button class="hq-tab" onclick="hqTab('zoo')">🏛️ Zoo View</button>
+    <button class="hq-tab" onclick="hqTab('team')">👥 Team</button>
+  </div>
+  <div class="hq-content">
+    <div id="hq-feed">
+      <div id="feedList"><div style="text-align:center;color:rgba(255,255,255,.3);font-size:.85rem;padding:2rem;">Waiting for the explorer to find animals... 🐾</div></div>
+    </div>
+    <div id="hq-zoo" style="display:none;">
+      <div class="hq-zoo-preview" id="hqZooPreview"></div>
+    </div>
+    <div id="hq-team" style="display:none;">
+      <div style="background:rgba(255,204,0,.07);border:1.5px solid rgba(255,204,0,.3);border-radius:18px;padding:1rem;margin-bottom:12px;">
+        <div class="f1" style="color:#ffcc00;font-size:.95rem;margin-bottom:8px;">👥 Expedition Team</div>
+        <div id="hqTeam"></div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:1rem;">
+        <div class="f1" style="color:#7dde3a;font-size:.88rem;margin-bottom:10px;">How it works</div>
+        <div style="font-size:.8rem;color:rgba(255,255,255,.7);line-height:1.8;">
+          🐾 <strong style="color:#ffcc00;">Explorer</strong> — discovers animals in 5 wild zones<br>
+          🏗️ <strong style="color:#ffcc00;">Builder</strong> — places animals in the zoo habitats<br>
+          🔭 <strong style="color:#ffcc00;">HQ</strong> — watches discoveries arrive live<br>
+          🤖 Claude generates each animal with real facts<br>
+          💾 The zoo saves forever and keeps growing!
+        </div>
+      </div>
+    </div>
+  </div>
+  <pb></pb>
+</div>
+
+<!-- ══════════════ DISCOVERY OVERLAY ══════════════ -->
+<div class="discovery-overlay" id="discoveryOverlay">
+  <div class="disc-wow" id="discWow">🎉 AMAZING DISCOVERY! 🎉</div>
+  <div id="discImgWrap" style="width:160px;height:160px;border-radius:20px;overflow:hidden;border:3px solid rgba(125,222,58,.6);background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;">
+    <span id="discEmoji" style="font-size:5rem;position:absolute;z-index:1;">🦁</span>
+    <img id="discImg" style="width:100%;height:100%;object-fit:cover;position:absolute;z-index:2;display:none;border-radius:17px;" alt="animal photo" onload="this.style.display='block'" onerror="this.style.display='none'"/>
+  </div>
+  <div class="disc-name" id="discName">Lion</div>
+  <div class="disc-card">
+    <div class="disc-fact" id="discFact1"></div>
+    <div class="disc-fact" id="discFact2"></div>
+    <div class="disc-fact" id="discFact3"></div>
+  </div>
+  <div class="disc-btns">
+    <button class="disc-btn btn-green home-btn" onclick="addToCollectionAndClose()">✅ Add to Zoo!</button>
+    <button class="disc-btn btn-ghost home-btn" onclick="closeDiscovery()">🔍 Keep exploring</button>
+  </div>
+</div>
+
+<!-- ══════════════ PLACE PICKER ══════════════ -->
+<div class="place-picker" id="placePicker">
+  <div class="picker-card">
+    <div class="picker-title" id="pickerTitle">🏗️ Place in which habitat?</div>
+    <div class="picker-habitats" id="pickerHabitats"></div>
+    <button class="picker-close" onclick="closePicker()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ NAMING MODAL ══════════════ -->
+
+  </div>
+</div>
+
+<!-- ══════════════ ZONE TRANSITION ══════════════ -->
+<div class="zone-trans" id="zoneTrans">
+  <span class="trans-icon" id="transIcon">🌿</span>
+  <div class="trans-name" id="transName">Jungle</div>
+  <div class="trans-sub" id="transSub">New zone unlocked!</div>
+</div>
+
+<!-- ══════════════ HOW TO PLAY ══════════════ -->
+<div id="howOverlay" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.88);align-items:center;justify-content:center;flex-direction:column;padding:2rem;" onclick="closeHow(event)">
+  <div style="background:linear-gradient(145deg,#0f2030,#162840);border:3px solid #4ab8d4;border-radius:24px;padding:1.5rem;max-width:340px;width:100%;">
+    <div class="f1" style="color:#4ab8d4;font-size:1.5rem;text-align:center;margin-bottom:1rem;">🦁 How to Play</div>
+    <div style="font-size:.85rem;color:rgba(255,255,255,.8);line-height:1.9;">
+      1️⃣ Host creates a room → shares the code<br>
+      2️⃣ Family joins on their phones<br>
+      3️⃣ <strong style="color:#ffcc00;">Explorer</strong> travels to wild zones<br>
+      4️⃣ Tap hiding spots to discover animals<br>
+      5️⃣ Claude reveals the animal with real facts<br>
+      6️⃣ Add animals to your zoo & <strong style="color:#ffcc00;">build their habitats!</strong><br>
+      7️⃣ Zoo saves forever — keep growing it!
+    </div>
+    <button class="home-btn btn-blue" style="margin-top:1rem;" onclick="closeHow()">Let's go! 🐾</button>
+  </div>
+</div>
+
+<!-- ══════════════ BOTTOM NAV ══════════════ -->
+<div class="bottom-nav" id="bottomNav" style="display:none;">
+  <button class="nav-btn active" id="nav-zone" onclick="navTo('zone')">
+    <span class="nav-icon">🔍</span>
+    <span class="nav-label">Discover</span>
+  </button>
+  <button class="nav-btn" id="nav-zoo" onclick="navTo('zoo')">
+    <span class="nav-icon">🏛️</span>
+    <span class="nav-label">My Zoo</span>
+  </button>
+  <button class="nav-btn" id="nav-hq" onclick="navTo('hq')" style="display:none;" id="hqNavBtn">
+    <span class="nav-icon">🔭</span>
+    <span class="nav-label">HQ</span>
+  </button>
+</div>
+
+<!-- INTERACT MODAL -->
+<div class="modal" id="interactModal">
+  <div class="modal-card" style="max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+      <div id="interactPhoto" style="width:70px;height:70px;border-radius:16px;overflow:hidden;border:2px solid rgba(125,222,58,.5);background:rgba(0,0,0,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
+      <div>
+        <div class="f1" style="color:#7dde3a;font-size:1.1rem;" id="interactName">Animal</div>
+        <div id="moodBar" style="margin-top:4px;"></div>
+      </div>
+    </div>
+    <!-- Action buttons -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;" id="interactActions"></div>
+    <!-- Decorations moved to Build tab -->
+    <div style="display:flex;gap:8px;margin-top:1rem;">
+      <button class="home-btn btn-ghost" style="flex:1;padding:.7rem;" onclick="closeInteract()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span style="font-size:1.2rem">🐾</span><span class="toast-text" id="toastText"></span></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  FIREBASE
+// ═══════════════════════════════════════════
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAbEpKRJ26g6YVr1Jvi1Osb7BnO3r85y-A",
+  authDomain: "dino-world-3aff4.firebaseapp.com",
+  databaseURL: "https://dino-world-3aff4-default-rtdb.firebaseio.com",
+  projectId: "dino-world-3aff4",
+  storageBucket: "dino-world-3aff4.firebasestorage.app",
+  messagingSenderId: "207965650843",
+  appId: "1:207965650843:web:241b48934bd760d5fd6b3e"
+};
+var db = null, useFirebase = false;
+try { firebase.initializeApp(FIREBASE_CONFIG); db = firebase.database(); useFirebase = true; }
+catch(e) { console.warn('Firebase:', e); }
+
+// ═══════════════════════════════════════════
+//  ZONES
+// ═══════════════════════════════════════════
+var ZONES = [
+  { id:'jungle',     name:'Jungle',       emoji:'🌿', bg:'bg-jungle',     particle:'#00ff88', spots:['🌿','🍃','🌴','🐚','🍀'] },
+  { id:'ocean',      name:'Ocean',        emoji:'🌊', bg:'bg-ocean',      particle:'#4488ff', spots:['🪸','💧','🫧','🌊','🐚'] },
+  { id:'savanna',    name:'Savanna',      emoji:'🌾', bg:'bg-savanna',    particle:'#ffaa00', spots:['🌾','🪨','🌵','🏔️','🍂'] },
+  { id:'arctic',     name:'Arctic',       emoji:'❄️', bg:'bg-arctic',     particle:'#aaddff', spots:['❄️','🧊','🌨️','🏔️','🪨'] },
+  { id:'rainforest', name:'Rainforest',   emoji:'🌺', bg:'bg-rainforest', particle:'#88ff44', spots:['🌺','🍄','🪴','🌿','🎋'] }
+];
+
+var HABITATS = [
+  { id:'jungle',     name:'Jungle Habitat',     emoji:'🌿', color:'rgba(30,100,16,.3)',  border:'rgba(125,222,58,.4)'  },
+  { id:'ocean',      name:'Ocean Habitat',      emoji:'🌊', color:'rgba(10,50,120,.3)',  border:'rgba(74,184,212,.4)'  },
+  { id:'savanna',    name:'Savanna Habitat',    emoji:'🌾', color:'rgba(100,70,10,.3)',  border:'rgba(255,180,50,.4)'  },
+  { id:'arctic',     name:'Arctic Habitat',     emoji:'❄️', color:'rgba(20,60,120,.3)',  border:'rgba(180,220,255,.4)' },
+  { id:'rainforest', name:'Rainforest Habitat', emoji:'🌺', color:'rgba(10,80,20,.3)',   border:'rgba(100,255,100,.4)' }
+];
+
+var GRID_SIZE = 8;
+
+// Decoration items per habitat
+var HABITAT_ITEMS = {
+  jungle:     [{id:'tree',   emoji:'🌳', name:'Tree'},     {id:'vine',   emoji:'🌿', name:'Vine'},    {id:'water',  emoji:'💧', name:'Water'},   {id:'log',    emoji:'🪵', name:'Log'},     {id:'flower', emoji:'🌸', name:'Flower'},  {id:'nest',   emoji:'🪺', name:'Nest'}],
+  ocean:      [{id:'coral',  emoji:'🪸', name:'Coral'},    {id:'rock',   emoji:'🪨', name:'Rock'},    {id:'kelp',   emoji:'🌿', name:'Kelp'},    {id:'cave',   emoji:'🕳️', name:'Cave'},    {id:'shell',  emoji:'🐚', name:'Shell'},   {id:'bubble', emoji:'🫧', name:'Bubbles'}],
+  savanna:    [{id:'grass',  emoji:'🌾', name:'Grass'},    {id:'tree',   emoji:'🌳', name:'Acacia'},  {id:'rock',   emoji:'🪨', name:'Rock'},    {id:'mud',    emoji:'💧', name:'Mud Pool'},{id:'bone',   emoji:'🦴', name:'Bones'},   {id:'burrow', emoji:'🕳️', name:'Burrow'}],
+  arctic:     [{id:'ice',    emoji:'🧊', name:'Ice'},      {id:'snow',   emoji:'❄️', name:'Snow'},    {id:'rock',   emoji:'🪨', name:'Rock'},    {id:'pool',   emoji:'💧', name:'Ice Pool'},{id:'fish',   emoji:'🐟', name:'Fish'},    {id:'cave',   emoji:'🕳️', name:'Den'}],
+  rainforest: [{id:'tree',   emoji:'🌴', name:'Palm'},     {id:'fern',   emoji:'🌿', name:'Fern'},    {id:'water',  emoji:'💧', name:'Stream'},  {id:'flower', emoji:'🌺', name:'Flower'},  {id:'log',    emoji:'🪵', name:'Log'},     {id:'mushroom',emoji:'🍄', name:'Mushroom'}]
+};
+
+// Animal interaction state  
+var animalMoods = {}; // { animalId: { hunger:100, happy:100, lastFed:0, lastPlayed:0 } }
+var interactModal = null;
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+var myRoom=null, myName='', myRole='', isHost=false;
+var currentZoneIdx=0, roomListener=null, lastFeedCount=0;
+var pendingAnimal=null, pickerAnimalId=null, namingHabitat=null;
+var zoo = {}; // { habitat_id: { cells: {0:animal_id,...}, name:'...' } }
+var collection = {}; // { animal_id: { emoji, name, zone, facts, inZoo:false } }
+var activeGameScreen = 'zone';
+
+// ═══════════════════════════════════════════
+//  DB HELPERS
+// ═══════════════════════════════════════════
+function dbGet(path, cb) {
+  if(useFirebase) db.ref(path).get().then(function(s){cb(s.exists()?s.val():null)}).catch(function(){cb(null)});
+  else cb(null);
+}
+function dbSet(path, data, cb) {
+  if(useFirebase) db.ref(path).set(data).then(function(){if(cb)cb()}).catch(function(e){if(cb)cb(e)});
+  else if(cb) cb();
+}
+function dbPush(path, data, cb) {
+  if(useFirebase){ var r=db.ref(path).push(); r.set(data).then(function(){if(cb)cb(r.key)}).catch(function(){if(cb)cb(null)}); }
+  else if(cb) cb('local_'+Date.now());
+}
+function dbUpdate2(updates, cb) {
+  if(useFirebase) db.ref().update(updates).then(function(){if(cb)cb()}).catch(function(e){if(cb)cb(e)});
+  else if(cb) cb();
+}
+function dbListen(path, cb) {
+  if(!useFirebase) return function(){};
+  var ref=db.ref(path);
+  ref.on('value',function(s){cb(s.val());});
+  return function(){ref.off();};
+}
+function genCode(){var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r='';for(var i=0;i<4;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
+
+// ═══════════════════════════════════════════
+//  PARTICLES
+// ═══════════════════════════════════════════
+function initParticles(color) {
+  var p=document.getElementById('particles'); p.innerHTML='';
+  for(var i=0;i<18;i++){
+    var d=document.createElement('div'); d.className='pt';
+    d.style.cssText='width:'+Math.random()*3+'px;height:'+d.style.width+';background:'+color+';left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;animation-delay:'+(Math.random()*3)+'s;animation-duration:'+(2+Math.random()*3)+'s;opacity:'+(0.2+Math.random()*0.5)+';';
+    p.appendChild(d);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  LOBBY UI
+// ═══════════════════════════════════════════
+function showView(id) {
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  var el=document.getElementById(id); if(el) el.classList.add('active');
+}
+function showHow(){document.getElementById('howOverlay').style.display='flex';}
+function closeHow(e){if(!e||e.target===document.getElementById('howOverlay'))document.getElementById('howOverlay').style.display='none';}
+
+// ═══════════════════════════════════════════
+//  CREATE / JOIN
+// ═══════════════════════════════════════════
+function createRoom() {
+  var name=document.getElementById('createName').value.trim();
+  var expName=document.getElementById('explorerName').value.trim()||'Explorer';
+  if(!name){var e=document.getElementById('createErr');e.style.display='block';setTimeout(function(){e.style.display='none';},2500);return;}
+  myName=name; myRole='host'; isHost=true;
+  var code=genCode(); myRoom=code;
+  var pid='p_'+Date.now();
+  var room={code:code,host:myName,explorerName:expName,started:false,players:{},animals:{},zoo:{},lastUpdate:Date.now()};
+  room.players[pid]={id:pid,name:myName,role:'host',emoji:'🔭'};
+  localStorage.setItem('zoo_room_code', code);
+  localStorage.setItem('zoo_my_name', myName);
+  localStorage.setItem('zoo_my_role', 'host');
+  dbSet('zoo_rooms/'+code, room, function(){
+    document.getElementById('lobbyCode').textContent=code;
+    renderLobbyPlayers(room.players);
+    showView('v-lobby');
+    startListen(code);
+  });
+}
+
+function joinRoom() {
+  var code=document.getElementById('joinCode').value.trim().toUpperCase();
+  var name=document.getElementById('joinName').value.trim();
+  var err=document.getElementById('joinErr');
+  if(!code||code.length<4||!name){err.textContent=!name?'Enter your name!':'Enter the 4-letter code!';err.style.display='block';setTimeout(function(){err.style.display='none';},3000);return;}
+  dbGet('zoo_rooms/'+code,function(room){
+    if(!room){err.textContent='Room not found!';err.style.display='block';setTimeout(function(){err.style.display='none';},3000);return;}
+    if(room.started){err.textContent='Session already started!';err.style.display='block';setTimeout(function(){err.style.display='none';},3000);return;}
+    myRoom=code; myName=name; isHost=false;
+    var players=room.players||{};
+    var hasExplorer=Object.values(players).some(function(p){return p.role==='explorer';});
+    myRole=hasExplorer?'hq':'explorer';
+    var pid='p_'+Date.now();
+    var u={};
+    u['zoo_rooms/'+code+'/players/'+pid]={id:pid,name:myName,role:myRole,emoji:myRole==='explorer'?'👦🏾':'🔭'};
+    u['zoo_rooms/'+code+'/lastUpdate']=Date.now();
+    localStorage.setItem('zoo_room_code', code);
+    localStorage.setItem('zoo_my_name', name);
+    localStorage.setItem('zoo_my_role', myRole);
+    dbUpdate2(u,function(){
+      document.getElementById('waitCode').textContent=code;
+      showView('v-waiting');
+      startListen(code);
+    });
+  });
+}
+
+function startListen(code) {
+  if(roomListener) roomListener();
+  roomListener=dbListen('zoo_rooms/'+code,onRoomUpdate);
+}
+
+function normalizeCells(cells) {
+  // Firebase returns numeric keys as numbers - normalize all to strings
+  var normalized={};
+  Object.keys(cells).forEach(function(k){
+    if(cells[k]) normalized[String(k)]=cells[k];
+  });
+  return normalized;
+}
+
+function onRoomUpdate(room) {
+  if(!room) return;
+  var players=room.players?Object.values(room.players):[];
+
+  if(document.getElementById('v-lobby').classList.contains('active')){
+    renderLobbyPlayers(room.players||{});
+    var canStart=players.length>=2;
+    var btn=document.getElementById('startBtn');
+    btn.disabled=!canStart; btn.style.opacity=canStart?'1':'0.4';
+    document.getElementById('startHint').textContent=players.length<2?'Waiting for family to join...':players.length+' players ready!';
+  }
+
+  if(document.getElementById('v-waiting').classList.contains('active')){
+    renderWaitPlayers(room.players||{});
+    if(room.started) enterSession(room);
+  }
+
+  if(room.started){
+    // Sync collection - always use Firebase as source of truth
+    collection=room.animals||{};
+    // Merge zoo carefully: keep local cells if Firebase has none for that hab
+    var remoteZoo=room.zoo||{};
+    Object.keys(remoteZoo).forEach(function(habId){
+      if(!zoo[habId]) { zoo[habId]=remoteZoo[habId]; return; }
+      // Merge: use remote name, but keep whichever cells object has more data
+      var localCells=normalizeCells(zoo[habId].cells||{});
+      var remoteCells=normalizeCells(remoteZoo[habId].cells||{});
+      var localCount=Object.keys(localCells).length;
+      var remoteCount=Object.keys(remoteCells).length;
+      zoo[habId].name=remoteZoo[habId].name||zoo[habId].name;
+      // Use whichever has more animals; prefer remote as source of truth
+      zoo[habId].cells=remoteCount>=localCount?remoteCells:localCells;
+    });
+    // Add any habs that are only in remote
+    Object.keys(remoteZoo).forEach(function(habId){
+      if(!zoo[habId]) zoo[habId]=remoteZoo[habId];
+    });
+    var animalCount=Object.keys(collection).length;
+    var inZooCount=Object.values(collection).filter(function(a){return a.inZoo;}).length;
+    document.getElementById('totalFound').textContent=animalCount;
+    document.getElementById('totalZoo').textContent=inZooCount;
+    // Also update zoneCounter pill
+    var zc=document.getElementById('zoneCounter');
+    if(zc) zc.textContent='Found: '+animalCount;
+
+    if(document.getElementById('s-zone').classList.contains('active')||document.getElementById('s-zoo').classList.contains('active')){
+      renderCollStrip();
+      renderZooBuilder();
+      renderCollectionGrid();
+    } else if(!document.getElementById('s-hq').classList.contains('active')){
+      renderCollStrip();
+      renderCollectionGrid();
+    }
+    if(document.getElementById('s-hq').classList.contains('active')){
+      updateHQ(room);
+    }
+    // New animal toast for HQ
+    if(myRole!=='explorer'){
+      var fc=animalCount;
+      if(fc>lastFeedCount){
+        var arr=Object.values(collection).sort(function(a,b){return (a.discoveredAt||0)-(b.discoveredAt||0);});
+        if(arr.length) showToast(arr[arr.length-1].emoji+' New: '+arr[arr.length-1].name+'!');
+        lastFeedCount=fc;
+      }
+    }
+  }
+}
+
+function renderLobbyPlayers(obj){
+  var el=document.getElementById('lobbyPlayers'); if(!el) return;
+  el.innerHTML=Object.values(obj||{}).map(function(p){
+    var b=p.role==='explorer'?'<span class="badge badge-e">EXPLORER</span>':p.role==='host'?'<span class="badge badge-h">HOST</span>':'<span class="badge badge-q">HQ</span>';
+    return '<div class="player-row"><span style="font-size:1.3rem">'+p.emoji+'</span><span style="font-weight:700;font-size:.9rem;flex:1;color:#fff;">'+p.name+'</span>'+b+'</div>';
+  }).join('');
+}
+function renderWaitPlayers(obj){
+  var el=document.getElementById('waitPlayers'); if(!el) return;
+  el.innerHTML=Object.values(obj||{}).map(function(p){
+    return '<div class="player-row"><span style="font-size:1.3rem">'+p.emoji+'</span><span style="font-weight:700;font-size:.9rem;color:#fff;">'+p.name+'</span></div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  START SESSION
+// ═══════════════════════════════════════════
+function startSession() {
+  var u={};
+  u['zoo_rooms/'+myRoom+'/started']=true;
+  u['zoo_rooms/'+myRoom+'/lastUpdate']=Date.now();
+  dbUpdate2(u,function(){
+    dbGet('zoo_rooms/'+myRoom,function(room){ if(room) enterSession(room); });
+  });
+}
+
+function enterSession(room) {
+  collection=room.animals||{};
+  zoo=room.zoo||{};
+  zoneSpotAnimals = {}; // reset spot cache for new session
+  document.getElementById('s-home').classList.remove('active');
+  document.getElementById('bottomNav').style.display='flex';
+
+  if(myRole==='hq'){
+    document.getElementById('nav-hq').style.display='flex';
+    navTo('hq');
+    updateHQ(room);
+    document.getElementById('hqRoomCode').textContent='ROOM '+myRoom;
+    lastFeedCount=Object.keys(collection).length;
+  } else {
+    // Explorer or host can do both
+    document.getElementById('zoneRoomCode').textContent=myRoom;
+    document.getElementById('zooRoomCode2').textContent='ROOM '+myRoom;
+    setZone(0);
+    navTo('zone');
+    renderZooBuilder();
+    renderCollectionGrid();
+    renderCollStrip();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  ZONE SYSTEM
+// ═══════════════════════════════════════════
+async function setZone(idx) {
+  currentZoneIdx=idx;
+  var z=ZONES[idx];
+  document.getElementById('mainBg').className='bg '+z.bg;
+  initParticles(z.particle);
+  document.getElementById('zoneNameEl').textContent=z.emoji+' '+z.name;
+  renderZoneScene(z);
+
+  // If we already pre-generated animals for this zone, just render
+  if(zoneSpotAnimals[z.id] && zoneSpotAnimals[z.id].filter(Boolean).length===8) {
+    renderHidingSpots(z);
+    return;
+  }
+
+  // Pre-generate all 8 unique animals at once
+  document.getElementById('loadingScreen').style.display='flex';
+  document.getElementById('loadingText').textContent='🤖 Hiding animals in the '+z.name+'...';
+
+  await preGenerateZoneAnimals(z.id);
+
+  document.getElementById('loadingScreen').style.display='none';
+  renderHidingSpots(z);
+}
+
+function renderZoneScene(z) {
+  var scenes = {
+    jungle: `<svg viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg">
+      <!-- Sky -->
+      <rect width="380" height="320" fill="#051a04"/>
+      <!-- Back canopy -->
+      <ellipse cx="30" cy="110" rx="75" ry="55" fill="#0d3008"/>
+      <ellipse cx="100" cy="85" rx="60" ry="48" fill="#123a0a"/>
+      <ellipse cx="190" cy="75" rx="70" ry="52" fill="#0d3008"/>
+      <ellipse cx="290" cy="90" rx="65" ry="50" fill="#0f3509"/>
+      <ellipse cx="360" cy="105" rx="60" ry="48" fill="#0d3008"/>
+      <!-- Mid canopy bright -->
+      <ellipse cx="55" cy="95" rx="55" ry="42" fill="#1a5010"/>
+      <ellipse cx="155" cy="70" rx="58" ry="44" fill="#1e5c12"/>
+      <ellipse cx="250" cy="80" rx="60" ry="46" fill="#1a5010"/>
+      <ellipse cx="340" cy="90" rx="52" ry="40" fill="#1e5c12"/>
+      <!-- Tall trees trunk -->
+      <rect x="40" y="140" width="14" height="180" rx="6" fill="#3a2008"/>
+      <rect x="150" y="130" width="12" height="190" rx="5" fill="#3a2008"/>
+      <rect x="270" y="145" width="13" height="175" rx="5" fill="#3a2008"/>
+      <!-- Front low bushes -->
+      <ellipse cx="0" cy="260" rx="60" ry="35" fill="#1a5010"/>
+      <ellipse cx="90" cy="270" rx="55" ry="30" fill="#1e5c12"/>
+      <ellipse cx="200" cy="275" rx="65" ry="32" fill="#1a5010"/>
+      <ellipse cx="310" cy="265" rx="58" ry="33" fill="#1e5c12"/>
+      <ellipse cx="390" cy="258" rx="55" ry="30" fill="#164a0e"/>
+      <!-- Ground -->
+      <rect x="0" y="278" width="380" height="42" fill="#0d2808"/>
+      <!-- Vines -->
+      <path d="M120,0 Q105,60 125,120 Q110,180 130,240" fill="none" stroke="#1a5010" stroke-width="3" opacity=".7"/>
+      <path d="M290,0 Q310,80 295,150 Q315,210 300,270" fill="none" stroke="#1a5010" stroke-width="2.5" opacity=".6"/>
+      <!-- Sunbeams -->
+      <path d="M190,0 L160,120" stroke="#ffff88" stroke-width="2" opacity=".08"/>
+      <path d="M210,0 L240,110" stroke="#ffff88" stroke-width="1.5" opacity=".06"/>
+    </svg>`,
+
+    ocean: `<svg viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg">
+      <!-- Deep water background -->
+      <rect width="380" height="320" fill="#020c1e"/>
+      <!-- Light shafts from surface -->
+      <path d="M60,0 L30,160" stroke="#1a4a8a" stroke-width="30" opacity=".12"/>
+      <path d="M160,0 L200,180" stroke="#1a4a8a" stroke-width="25" opacity=".10"/>
+      <path d="M280,0 L310,150" stroke="#1a4a8a" stroke-width="28" opacity=".11"/>
+      <!-- Water surface shimmer -->
+      <rect x="0" y="0" width="380" height="18" fill="#062848"/>
+      <path d="M0,10 Q48,2 95,10 Q143,18 190,10 Q238,2 285,10 Q333,18 380,10" fill="#0a3860" opacity=".8"/>
+      <path d="M0,18 Q50,10 100,18 Q150,26 200,18 Q250,10 300,18 Q340,26 380,18" fill="#082848" opacity=".5"/>
+      <!-- Mid water layer -->
+      <rect x="0" y="60" width="380" height="260" fill="#031428" opacity=".5"/>
+      <!-- Coral reef left -->
+      <ellipse cx="30" cy="290" rx="35" ry="20" fill="#6a1a30"/>
+      <rect x="18" y="258" width="8" height="32" rx="4" fill="#8a2240"/>
+      <rect x="28" y="248" width="7" height="42" rx="3" fill="#aa2a50"/>
+      <rect x="40" y="255" width="9" height="35" rx="4" fill="#8a2240"/>
+      <ellipse cx="28" cy="255" rx="14" ry="10" fill="#cc4466"/>
+      <ellipse cx="42" cy="250" rx="12" ry="9" fill="#aa3355"/>
+      <!-- Coral reef right -->
+      <ellipse cx="340" cy="295" rx="40" ry="18" fill="#4a1a60"/>
+      <rect x="328" y="262" width="8" height="33" rx="4" fill="#6a2a80"/>
+      <rect x="342" y="255" width="9" height="40" rx="4" fill="#7a3090"/>
+      <ellipse cx="335" cy="258" rx="13" ry="9" fill="#9a4aaa"/>
+      <ellipse cx="350" cy="252" rx="11" ry="8" fill="#8a3a9a"/>
+      <!-- Seaweed -->
+      <path d="M100,320 Q90,280 105,240 Q95,200 110,165" fill="none" stroke="#1a6030" stroke-width="5" stroke-linecap="round"/>
+      <path d="M115,320 Q125,275 112,235 Q122,195 108,160" fill="none" stroke="#1a6030" stroke-width="4" stroke-linecap="round"/>
+      <path d="M240,320 Q250,278 238,238 Q248,198 235,158" fill="none" stroke="#1a5028" stroke-width="5" stroke-linecap="round"/>
+      <!-- Rocks on seabed -->
+      <ellipse cx="175" cy="308" rx="40" ry="14" fill="#0a1828"/>
+      <ellipse cx="220" cy="312" rx="30" ry="12" fill="#0c1e30"/>
+      <!-- Bubbles -->
+      <circle cx="80" cy="220" r="5" fill="none" stroke="#2a6080" stroke-width="1.5" opacity=".6"/>
+      <circle cx="85" cy="180" r="4" fill="none" stroke="#2a6080" stroke-width="1.5" opacity=".5"/>
+      <circle cx="200" cy="200" r="6" fill="none" stroke="#2a6080" stroke-width="1.5" opacity=".6"/>
+      <circle cx="195" cy="155" r="4" fill="none" stroke="#2a6080" stroke-width="1" opacity=".4"/>
+      <!-- Sandy bottom -->
+      <rect x="0" y="300" width="380" height="20" fill="#0e1e30"/>
+    </svg>`,
+
+    savanna: `<svg viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg">
+      <!-- Sky gradient dusk -->
+      <rect width="380" height="320" fill="#1a0800"/>
+      <rect width="380" height="160" fill="#280e00" opacity=".7"/>
+      <!-- Sun low on horizon -->
+      <circle cx="310" cy="155" r="32" fill="#cc5500" opacity=".4"/>
+      <circle cx="310" cy="155" r="20" fill="#ee7700" opacity=".5"/>
+      <!-- Horizon glow -->
+      <ellipse cx="190" cy="165" rx="190" ry="30" fill="#3a1800" opacity=".6"/>
+      <!-- Distant mountains silhouette -->
+      <polygon points="0,180 40,130 90,175 130,120 180,170 220,115 270,165 310,125 360,170 380,145 380,200 0,200" fill="#1e0c00" opacity=".9"/>
+      <!-- Acacia trees - left -->
+      <rect x="35" y="160" width="10" height="100" rx="4" fill="#2a1400"/>
+      <rect x="28" y="155" width="24" height="6" rx="2" fill="#2a1400"/>
+      <ellipse cx="22" cy="150" rx="20" ry="10" fill="#1e3a08"/>
+      <ellipse cx="40" cy="145" rx="28" ry="12" fill="#244508"/>
+      <ellipse cx="58" cy="150" rx="20" ry="10" fill="#1e3a08"/>
+      <!-- Acacia trees - right -->
+      <rect x="300" y="155" width="11" height="105" rx="4" fill="#2a1400"/>
+      <rect x="292" y="150" width="28" height="6" rx="2" fill="#2a1400"/>
+      <ellipse cx="287" cy="145" rx="22" ry="11" fill="#1e3a08"/>
+      <ellipse cx="306" cy="140" rx="30" ry="13" fill="#244508"/>
+      <ellipse cx="324" cy="146" rx="21" ry="10" fill="#1e3a08"/>
+      <!-- Tall grass - mid ground -->
+      <rect x="0" y="220" width="380" height="100" fill="#1a0e00"/>
+      <!-- Grass blades -->
+      <path d="M10,280 Q8,240 15,220" fill="none" stroke="#4a3008" stroke-width="3"/>
+      <path d="M25,282 Q22,235 30,215" fill="none" stroke="#5a3a0a" stroke-width="2.5"/>
+      <path d="M50,278 Q48,238 55,218" fill="none" stroke="#4a3008" stroke-width="3"/>
+      <path d="M80,280 Q77,242 84,222" fill="none" stroke="#5a3a0a" stroke-width="2.5"/>
+      <path d="M110,277 Q108,240 115,220" fill="none" stroke="#4a3008" stroke-width="3"/>
+      <path d="M140,280 Q137,238 144,215" fill="none" stroke="#5a3a0a" stroke-width="2.5"/>
+      <path d="M170,278 Q168,240 175,218" fill="none" stroke="#4a3008" stroke-width="3"/>
+      <path d="M200,280 Q198,242 205,222" fill="none" stroke="#5a3a0a" stroke-width="2.5"/>
+      <path d="M230,277 Q228,238 235,218" fill="none" stroke="#4a3008" stroke-width="3"/>
+      <path d="M260,280 Q257,240 264,220" fill="none" stroke="#4a3008" stroke-width="2.5"/>
+      <path d="M290,278 Q288,240 295,220" fill="none" stroke="#5a3a0a" stroke-width="3"/>
+      <path d="M320,280 Q317,238 324,215" fill="none" stroke="#4a3008" stroke-width="2.5"/>
+      <path d="M355,278 Q353,240 360,218" fill="none" stroke="#5a3a0a" stroke-width="3"/>
+      <!-- Ground -->
+      <rect x="0" y="295" width="380" height="25" fill="#120800"/>
+      <!-- Rocks -->
+      <ellipse cx="160" cy="285" rx="25" ry="10" fill="#1e1000"/>
+      <ellipse cx="250" cy="290" rx="18" ry="8" fill="#1a0e00"/>
+    </svg>`,
+
+    arctic: `<svg viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg">
+      <!-- Night sky -->
+      <rect width="380" height="320" fill="#04080e"/>
+      <!-- Aurora borealis -->
+      <path d="M0,60 Q95,30 190,55 Q285,80 380,50" fill="none" stroke="#00aa66" stroke-width="18" opacity=".15"/>
+      <path d="M0,75 Q95,45 190,70 Q285,95 380,65" fill="none" stroke="#0088aa" stroke-width="12" opacity=".12"/>
+      <path d="M0,50 Q95,20 190,45 Q285,70 380,40" fill="none" stroke="#00cc88" stroke-width="8" opacity=".1"/>
+      <!-- Stars -->
+      <circle cx="30" cy="20" r="1.5" fill="#ffffff" opacity=".8"/>
+      <circle cx="80" cy="15" r="1" fill="#ffffff" opacity=".7"/>
+      <circle cx="130" cy="25" r="1.5" fill="#ffffff" opacity=".9"/>
+      <circle cx="200" cy="10" r="1" fill="#ffffff" opacity=".8"/>
+      <circle cx="260" cy="22" r="1.5" fill="#ffffff" opacity=".7"/>
+      <circle cx="320" cy="12" r="1" fill="#ffffff" opacity=".9"/>
+      <circle cx="355" cy="30" r="1.5" fill="#ffffff" opacity=".8"/>
+      <circle cx="170" cy="35" r="1" fill="#ffffff" opacity=".6"/>
+      <!-- Ice mountains back -->
+      <polygon points="0,200 50,110 110,190 160,90 220,185 270,100 330,180 380,95 380,220 0,220" fill="#0a1428" opacity=".9"/>
+      <!-- Snow caps -->
+      <polygon points="50,110 38,145 62,145" fill="#c8d8f0" opacity=".6"/>
+      <polygon points="160,90 148,128 172,128" fill="#c8d8f0" opacity=".7"/>
+      <polygon points="270,100 258,135 282,135" fill="#c8d8f0" opacity=".6"/>
+      <!-- Ice floes/ground -->
+      <rect x="0" y="240" width="380" height="80" fill="#0c1828"/>
+      <ellipse cx="80" cy="248" rx="90" ry="20" fill="#162438"/>
+      <ellipse cx="240" cy="252" rx="100" ry="18" fill="#182840"/>
+      <ellipse cx="370" cy="246" rx="60" ry="16" fill="#142030"/>
+      <!-- Snow on ground -->
+      <ellipse cx="50" cy="262" rx="50" ry="12" fill="#c8d8f0" opacity=".4"/>
+      <ellipse cx="190" cy="268" rx="80" ry="14" fill="#c8d8f0" opacity=".35"/>
+      <ellipse cx="330" cy="264" rx="55" ry="11" fill="#c8d8f0" opacity=".4"/>
+      <!-- Ice cracks -->
+      <path d="M100,255 L120,270 L140,258" fill="none" stroke="#0a1828" stroke-width="2" opacity=".8"/>
+      <path d="M200,260 L215,275 L230,262" fill="none" stroke="#0a1828" stroke-width="2" opacity=".8"/>
+      <!-- Icicles from top -->
+      <polygon points="30,0 25,40 35,0" fill="#a0c0e0" opacity=".3"/>
+      <polygon points="120,0 114,55 126,0" fill="#a0c0e0" opacity=".25"/>
+      <polygon points="240,0 234,45 246,0" fill="#a0c0e0" opacity=".3"/>
+      <polygon points="340,0 335,50 345,0" fill="#a0c0e0" opacity=".25"/>
+    </svg>`,
+
+    rainforest: `<svg viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg">
+      <!-- Dark forest floor -->
+      <rect width="380" height="320" fill="#030e04"/>
+      <!-- Canopy layers - back (darkest) -->
+      <ellipse cx="0" cy="55" rx="80" ry="60" fill="#072008"/>
+      <ellipse cx="80" cy="35" rx="70" ry="55" fill="#083010"/>
+      <ellipse cx="190" cy="30" rx="85" ry="60" fill="#072008"/>
+      <ellipse cx="300" cy="40" rx="75" ry="58" fill="#083010"/>
+      <ellipse cx="390" cy="50" rx="70" ry="55" fill="#072008"/>
+      <!-- Canopy mid (medium) -->
+      <ellipse cx="30" cy="40" rx="65" ry="48" fill="#0d3a0e"/>
+      <ellipse cx="130" cy="25" rx="72" ry="52" fill="#104010"/>
+      <ellipse cx="240" cy="30" rx="78" ry="54" fill="#0d3a0e"/>
+      <ellipse cx="350" cy="38" rx="65" ry="48" fill="#104010"/>
+      <!-- Canopy front (brightest) -->
+      <ellipse cx="60" cy="30" rx="58" ry="42" fill="#165a16"/>
+      <ellipse cx="170" cy="18" rx="65" ry="46" fill="#1a6618"/>
+      <ellipse cx="280" cy="25" rx="60" ry="44" fill="#165a16"/>
+      <ellipse cx="380" cy="32" rx="55" ry="40" fill="#1a6618"/>
+      <!-- Giant tree trunks -->
+      <rect x="30" y="80" width="18" height="240" rx="8" fill="#1a0e04"/>
+      <rect x="165" y="68" width="20" height="252" rx="8" fill="#1a0e04"/>
+      <rect x="310" y="75" width="17" height="245" rx="7" fill="#1a0e04"/>
+      <!-- Tree roots -->
+      <path d="M30,290 Q10,310 0,320" fill="none" stroke="#1a0e04" stroke-width="8" stroke-linecap="round"/>
+      <path d="M48,295 Q55,312 50,320" fill="none" stroke="#1a0e04" stroke-width="7" stroke-linecap="round"/>
+      <path d="M165,295 Q148,312 140,320" fill="none" stroke="#1a0e04" stroke-width="8" stroke-linecap="round"/>
+      <path d="M185,292 Q198,310 200,320" fill="none" stroke="#1a0e04" stroke-width="7" stroke-linecap="round"/>
+      <!-- Hanging vines -->
+      <path d="M90,0 Q80,50 95,110 Q82,170 98,230 Q85,270 90,320" fill="none" stroke="#1a5010" stroke-width="3.5" opacity=".8"/>
+      <path d="M200,0 Q215,60 202,130 Q218,190 205,260" fill="none" stroke="#1a5010" stroke-width="3" opacity=".7"/>
+      <path d="M330,0 Q318,55 332,120 Q320,185 335,250" fill="none" stroke="#1a5010" stroke-width="3.5" opacity=".8"/>
+      <!-- Hanging leaves on vines -->
+      <ellipse cx="93" cy="115" rx="12" ry="7" fill="#1e6018" opacity=".8" transform="rotate(-20,93,115)"/>
+      <ellipse cx="88" cy="175" rx="11" ry="7" fill="#246020" opacity=".7" transform="rotate(15,88,175)"/>
+      <ellipse cx="205" cy="135" rx="12" ry="7" fill="#1e6018" opacity=".8" transform="rotate(10,205,135)"/>
+      <!-- Floor ferns and mushrooms -->
+      <ellipse cx="0" cy="300" rx="55" ry="25" fill="#0d2a0a"/>
+      <ellipse cx="100" cy="308" rx="48" ry="20" fill="#0a2408"/>
+      <ellipse cx="210" cy="305" rx="55" ry="22" fill="#0d2a0a"/>
+      <ellipse cx="320" cy="302" rx="50" ry="20" fill="#0a2408"/>
+      <!-- Mushrooms -->
+      <rect x="125" y="290" width="6" height="18" rx="2" fill="#3a2010"/>
+      <ellipse cx="128" cy="290" rx="12" ry="7" fill="#cc4422"/>
+      <circle cx="122" cy="288" r="2" fill="#ffeecc" opacity=".8"/>
+      <circle cx="131" cy="287" r="1.5" fill="#ffeecc" opacity=".8"/>
+      <!-- Mist/atmosphere -->
+      <rect x="0" y="250" width="380" height="70" fill="#030e04" opacity=".4"/>
+    </svg>`
+  };
+  document.getElementById('zoneBgScene').innerHTML=scenes[z.id]||scenes['jungle'];
+}
+
+var zoneSpotAnimals = {}; // { zoneId: [animal|null, ...] } pre-generated per spot
+
+function renderHidingSpots(z) {
+  document.querySelectorAll('.hide-spot').forEach(function(el){el.remove();});
+  var area = document.getElementById('sceneArea');
+
+  // Unique hiding spot icons per zone — 8 different ones each
+  var spotDefs = {
+    jungle:     ['🌿','🍃','🌴','🪴','🍀','🌱','🎋','🪵'],
+    ocean:      ['🪸','🐚','🫧','🪨','🌊','💧','🐠','🦀'],
+    savanna:    ['🌾','🪨','🏔️','🌵','🍂','🌻','🪺','🪸'],
+    arctic:     ['❄️','🧊','🏔️','🌨️','🪨','🌊','💎','🫧'],
+    rainforest: ['🌺','🍄','🎋','🪴','🌸','🍃','🪸','🌿']
+  };
+
+  // Position spots more spread around the scene naturally
+  var positions = [
+    {top:'12%', left:'10%'},  {top:'10%', right:'12%'},
+    {top:'32%', left:'5%'},   {top:'30%', right:'8%'},
+    {top:'52%', left:'28%'},  {top:'48%', right:'22%'},
+    {top:'68%', left:'8%'},   {top:'65%', right:'10%'}
+  ];
+
+  var glowColors = {
+    jungle:'rgba(50,180,40,.35)', ocean:'rgba(40,100,220,.35)',
+    savanna:'rgba(200,140,20,.35)', arctic:'rgba(120,180,240,.35)',
+    rainforest:'rgba(30,150,50,.35)'
+  };
+
+  var icons = spotDefs[z.id] || spotDefs['jungle'];
+  // Shuffle icons so order is random each time
+  var shuffled = icons.slice().sort(function(){return Math.random()-.5;});
+
+  // Init spot animals array for this zone if not already
+  if(!zoneSpotAnimals[z.id]) zoneSpotAnimals[z.id] = new Array(8).fill(null);
+
+  positions.forEach(function(pos, i) {
+    var spot = document.createElement('div');
+    spot.className = 'hide-spot';
+    spot.dataset.spotIdx = i;
+    spot.dataset.zoneId = z.id;
+    spot.style.cssText = 'width:64px;height:64px;position:absolute;';
+    if(pos.top)    spot.style.top    = pos.top;
+    if(pos.left)   spot.style.left   = pos.left;
+    if(pos.right)  spot.style.right  = pos.right;
+    if(pos.bottom) spot.style.bottom = pos.bottom;
+    spot.style.animationDelay = (i * 0.35) + 's';
+
+    // If already found this session, show as faded
+    if(zoneSpotAnimals[z.id][i] && zoneSpotAnimals[z.id][i].collected) {
+      spot.classList.add('found');
+      spot.style.opacity = '.25';
+    }
+
+    var glow = document.createElement('div');
+    glow.className = 'spot-glow';
+    glow.style.background = glowColors[z.id] || 'rgba(125,222,58,.25)';
+
+    var icon = document.createElement('span');
+    icon.className = 'spot-icon';
+    icon.textContent = shuffled[i];
+
+    spot.appendChild(glow);
+    spot.appendChild(icon);
+    spot.onclick = function(){ tapSpot(this); };
+    area.appendChild(spot);
+  });
+}
+
+function tapSpot(spotEl) {
+  if(spotEl.classList.contains('found')) return;
+  var spotIdx = parseInt(spotEl.dataset.spotIdx);
+  var zoneId  = spotEl.dataset.zoneId;
+
+  var animal = zoneSpotAnimals[zoneId] && zoneSpotAnimals[zoneId][spotIdx];
+  if(!animal) { showToast('Still loading... try again!'); return; }
+  if(animal.collected) return;
+
+  spotEl.classList.add('found');
+  spotEl.style.opacity = '.3';
+  animal.collected = true;
+  animal.discoveredAt = Date.now();
+  pendingAnimal = animal;
+  
+  showDiscovery(animal);
+}
+
+// ═══════════════════════════════════════════
+//  AI ANIMAL GENERATION
+// ═══════════════════════════════════════════
+async function preGenerateZoneAnimals(zoneId) {
+  var zoneNames={jungle:'jungle/tropical forest',ocean:'ocean/deep sea',savanna:'African savanna/grassland',arctic:'arctic/polar region',rainforest:'Amazon rainforest'};
+
+  // Ask Claude for all 8 unique animals in one single API call
+  var alreadyFound = Object.values(collection).map(function(a){return a.name;});
+  var excludeNote = alreadyFound.length > 0 ? ' Do NOT include any of these: '+alreadyFound.join(', ')+'.' : '';
+
+  var prompt = 'Generate exactly 8 different real animals all found in the '+zoneNames[zoneId]+' for a zoo discovery game for a 4-year-old. Each animal must be UNIQUE — no repeats.'+excludeNote+' Avoid the most obvious animals (lion, elephant, shark, penguin, polar bear). Pick surprising, lesser-known creatures. For each animal include: name, one emoji, three fun kid-friendly facts (each under 14 words, starting with an emoji), what it eats, and zone id.\n\nRespond ONLY as a valid JSON array of 8 objects, no markdown:\n[{"name":"...","emoji":"...","facts":["emoji fact","emoji fact","emoji fact"],"eats":"...","zone":"'+zoneId+'"},...]';
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
+    });
+    var data = await resp.json();
+    var raw = data.content[0].text.replace(/```json|```/g,'').trim();
+    var animals = JSON.parse(raw);
+
+    zoneSpotAnimals[zoneId] = animals.slice(0,8).map(function(a, i){
+      return Object.assign({}, a, {
+        id: 'a_'+Date.now()+'_'+i,
+        discoveredAt: null,
+        discoveredBy: myName,
+        zoneId: zoneId,
+        inZoo: false,
+        collected: false
+      });
+    });
+
+    // Pad to 8 if Claude returned fewer
+    while(zoneSpotAnimals[zoneId].length < 8) {
+      var fallback = getFallbackAnimal(zoneId, zoneSpotAnimals[zoneId].length);
+      zoneSpotAnimals[zoneId].push(fallback);
+    }
+
+  } catch(e) {
+    // Full fallback — 8 pre-written animals per zone
+    zoneSpotAnimals[zoneId] = getFullFallbackPool(zoneId);
+  }
+}
+
+function getFallbackAnimal(zoneId, idx) {
+  var pool = getFullFallbackPool(zoneId);
+  var a = Object.assign({}, pool[idx % pool.length]);
+  a.id = 'a_'+Date.now()+'_'+idx+'_'+Math.random();
+  return a;
+}
+
+function getFullFallbackPool(zoneId) {
+  var pools = {
+    jungle: [
+      {name:'Okapi',emoji:'🦌',facts:['🦓 Looks like a zebra but is actually related to giraffes!','👅 Its tongue is so long it can lick its own ears!','🌿 So shy that scientists once thought it was a myth!'],eats:'leaves'},
+      {name:'Sun Bear',emoji:'🐻',facts:['☀️ Has a yellow patch on its chest shaped like the sun!','👅 Has the longest tongue of any bear — perfect for honey!','🌳 Is the smallest bear species in the whole world!'],eats:'honey'},
+      {name:'Proboscis Monkey',emoji:'🐒',facts:['👃 The males have enormous noses as long as your finger!','🏊 They are excellent swimmers and dive into rivers!','🤣 Their big noses make their calls incredibly loud!'],eats:'leaves'},
+      {name:'Clouded Leopard',emoji:'🐆',facts:['☁️ Named for its beautiful cloud-shaped spots!','🌳 Can walk upside down along tree branches!','🦷 Has the longest fangs of any living cat!'],eats:'deer'},
+      {name:'Binturong',emoji:'🦡',facts:['🍿 Binturongs smell exactly like buttered popcorn!','🌿 They have a prehensile tail that grips branches like a hand!','😴 They sleep all day curled up high in the treetops!'],eats:'fruit'},
+      {name:'Pygmy Elephant',emoji:'🐘',facts:['👶 Pygmy elephants are the smallest elephants in the world!','😊 They are known for being the most gentle and friendly elephants!','💧 They love water and swim between islands in Borneo!'],eats:'grass'},
+      {name:'Flying Squirrel',emoji:'🐿️',facts:['🛸 Flying squirrels glide up to 90 meters through the air!','🌙 They only come out at night and their eyes glow in the dark!','🏠 Up to 50 flying squirrels can live in one single tree!'],eats:'nuts'},
+      {name:'Hornbill',emoji:'🦜',facts:['👑 Hornbills have a giant horn on top of their beak called a casque!','🏠 The mother seals herself inside a tree hole to lay her eggs!','🎺 Their calls are so loud they can be heard from far away!'],eats:'fruit'}
+    ],
+    ocean: [
+      {name:'Mantis Shrimp',emoji:'🦐',facts:['👁️ Can see 16 kinds of color — humans only see 3!','💥 Punches so hard it can crack aquarium glass!','⚡ Its punch moves faster than a bullet!'],eats:'crabs'},
+      {name:'Mimic Octopus',emoji:'🐙',facts:['🎭 Can copy the shape of 15 different animals!','🦁 Pretends to be lionfish and sea snakes to scare enemies!','🧠 Is one of the cleverest creatures in the ocean!'],eats:'fish'},
+      {name:'Blobfish',emoji:'🐡',facts:['😢 Looks like a sad blob above water but is normal-shaped underwater!','🌊 Lives 3000 feet deep where pressure is crushing!','🥱 Just floats and waits for food to drift into its mouth!'],eats:'sea creatures'},
+      {name:'Leafy Sea Dragon',emoji:'🐉',facts:['🍃 Is covered in leaf-shaped flaps so it looks exactly like seaweed!','💨 Such a good disguise that fish swim right past it!','🎨 Can slowly change color to match its surroundings!'],eats:'tiny shrimp'},
+      {name:'Dumbo Octopus',emoji:'🐙',facts:['🐘 Named Dumbo because of its elephant-ear-shaped fins!','🌊 Lives deeper in the ocean than almost any other octopus!','💜 Comes in many colors including purple, red and white!'],eats:'worms'},
+      {name:'Vampire Squid',emoji:'🦑',facts:['🧛 Has a cape of webbing between its arms like Dracula!','💡 Can produce its own glowing light in the dark deep sea!','🔄 Can turn itself inside out to show spiky bumps!'],eats:'marine snow'},
+      {name:'Christmas Tree Worm',emoji:'🪱',facts:['🎄 Looks exactly like a tiny colorful Christmas tree!','⚡ Disappears into its burrow in a fraction of a second!','🌈 Comes in almost every color of the rainbow!'],eats:'plankton'},
+      {name:'Pistol Shrimp',emoji:'🦞',facts:['💥 Snaps its claw so fast it creates a shockwave that stuns fish!','⚡ The snap is as loud as a gunshot underwater!','🌡️ The snap is briefly hotter than the surface of the sun!'],eats:'fish'}
+    ],
+    savanna: [
+      {name:'Meerkat',emoji:'🦡',facts:['☀️ Stands up tall to warm its tummy in the morning sun!','🐍 Is immune to deadly snake and scorpion venom!','👶 Baby meerkats have special babysitters while parents hunt!'],eats:'insects'},
+      {name:'Aardvark',emoji:'🐷',facts:['👅 Has a sticky tongue 30cm long to catch thousands of ants!','🕳️ Can dig a burrow faster than a team with shovels!','👂 Its enormous ears rotate to hear underground insects!'],eats:'termites'},
+      {name:'Secretary Bird',emoji:'🦅',facts:['👟 Stomps on snakes with powerful feet to kill them!','🦵 Has the longest legs of any bird of prey!','👁️ Can spot a tiny lizard from way up in the sky!'],eats:'snakes'},
+      {name:'Pangolin',emoji:'🦔',facts:['🛡️ Its scales are made of keratin — the same as your fingernails!','🌀 Rolls into a perfect armored ball when scared!','👅 Has no teeth but uses a super long sticky tongue to eat ants!'],eats:'ants'},
+      {name:'Dik-dik',emoji:'🦌',facts:['🐜 Is one of the tiniest antelopes — only as tall as a cat!','💧 Almost never needs to drink water — gets it all from plants!','👁️ Has massive eyes that make it look permanently surprised!'],eats:'leaves'},
+      {name:'Honey Badger',emoji:'🦡',facts:['💪 Is voted the most fearless animal in the world!','🐍 Can survive bites from the most venomous snakes!','🔓 Is so clever it can unlock latches and open gates!'],eats:'honey'},
+      {name:'Shoebill',emoji:'🦤',facts:['👟 Has a beak shaped exactly like a giant wooden clog shoe!','🗿 Stands completely still for hours like a stone statue!','⚡ Strikes at fish faster than the eye can see!'],eats:'fish'},
+      {name:'Naked Mole Rat',emoji:'🐀',facts:['👑 Lives like bees with one queen and worker mole rats!','🔥 Cannot feel pain or heat on its skin!','🧬 Almost never gets cancer and can live 30 years!'],eats:'roots'}
+    ],
+    arctic: [
+      {name:'Arctic Fox',emoji:'🦊',facts:['❄️ Can survive temperatures of minus 70 degrees!','🎨 Its fur magically changes from white to brown each year!','👂 Can hear mice moving under deep snow!'],eats:'lemmings'},
+      {name:'Narwhal',emoji:'🦄',facts:['🦄 Called the unicorn of the sea for its spiral tusk!','🌊 Its tusk is actually a giant tooth growing through its lip!','🎵 Scientists think the tusk senses changes in the ocean!'],eats:'fish'},
+      {name:'Snowy Owl',emoji:'🦉',facts:['❄️ Almost completely white to blend into the snow!','👁️ Can turn its head almost all the way around!','🌞 Unlike most owls it hunts during the Arctic daytime!'],eats:'lemmings'},
+      {name:'Harp Seal Pup',emoji:'🐟',facts:['⬜ Born completely white so polar bears cannot spot them in the snow!','🍼 Pups triple in size in just 12 days on rich mother milk!','🎵 Each mother recognizes her pup by its unique smell and cry!'],eats:'fish'},
+      {name:'Musk Ox',emoji:'🐂',facts:['🧶 Has the softest warmest wool of any animal — even warmer than sheep!','🔄 The whole herd forms a circle with horns out to protect babies!','❄️ Has lived through ice ages alongside woolly mammoths!'],eats:'grass'},
+      {name:'Beluga Whale',emoji:'🐳',facts:['😊 Called the canary of the sea because it sings so many songs!','😁 Is the only whale that can move its lips and make facial expressions!','🎶 Can mimic human voices and even copy other whales!'],eats:'fish'},
+      {name:'Ptarmigan',emoji:'🐦',facts:['🎨 Changes from brown in summer to pure white in winter!','🦶 Has feathers growing on its feet like built-in snowshoes!','🌡️ Can survive in temperatures colder than your freezer!'],eats:'berries'},
+      {name:'Wolverine',emoji:'🦡',facts:['💪 Can fight off animals ten times its size including wolves!','👃 Has such a powerful nose it can smell prey buried under snow!','🌨️ Travels up to 50 km a day across the snow to find food!'],eats:'meat'}
+    ],
+    rainforest: [
+      {name:'Poison Dart Frog',emoji:'🐸',facts:['🎨 Bright colors warn enemies they are super poisonous!','💧 Carries babies on its back to find little pools of water!','🌿 Indigenous peoples used their poison on blow dart tips!'],eats:'ants'},
+      {name:'Glass Frog',emoji:'🐸',facts:['💎 Has a see-through tummy — you can see all its organs!','🫀 You can literally watch its tiny heart beating through its skin!','🍃 Almost invisible when hiding on green leaves!'],eats:'insects'},
+      {name:'Tapir',emoji:'🐷',facts:['👃 Has a stretchy bendy nose it uses like a mini trunk!','🦏 Related to horses and rhinos despite looking like a pig!','💦 Baby tapirs have spots and stripes for camouflage!'],eats:'fruit'},
+      {name:'Harpy Eagle',emoji:'🦅',facts:['💪 Has talons as large as a grizzly bear claw!','👑 Is the most powerful eagle in the entire world!','👁️ Can spot a tiny monkey from high above the canopy!'],eats:'monkeys'},
+      {name:'Sloth',emoji:'🦥',facts:['🐢 Is so slow that algae grows green on its fur!','💤 Sleeps up to 20 hours every single day!','🌿 The algae acts as perfect camouflage in the green forest!'],eats:'leaves'},
+      {name:'Axolotl',emoji:'🦎',facts:['✨ Can regrow its legs, heart and even parts of its brain!','😊 Has a permanent smile on its face that makes it look happy!','👶 Never fully grows up — stays in its baby form forever!'],eats:'worms'},
+      {name:'Morpho Butterfly',emoji:'🦋',facts:['💙 Has wings so bright blue they can be seen from an airplane!','✨ The blue comes from microscopic light-bending structures, not pigment!','🌊 Its wings change color as you tilt them like a hologram!'],eats:'fruit juice'},
+      {name:'Toucan',emoji:'🐦',facts:['🎨 Has a beak as long as its whole body but it weighs almost nothing!','❄️ Uses its giant beak like an air conditioner to cool its blood!','🌈 The bright beak helps toucans recognize each other in the dark forest!'],eats:'fruit'}
+    ]
+  };
+  var pool = pools[zoneId] || pools['jungle'];
+  return pool.map(function(a, i){
+    return Object.assign({}, a, {
+      zone: zoneId,
+      id: 'a_'+Date.now()+'_'+i+'_'+Math.random(),
+      discoveredAt: null,
+      discoveredBy: myName,
+      zoneId: zoneId,
+      inZoo: false,
+      collected: false
+    });
+  });
+}
+
+// ═══════════════════════════════════════════
+//  DISCOVERY OVERLAY
+// ═══════════════════════════════════════════
+function showDiscovery(animal) {
+  var wows=['🎉 AMAZING DISCOVERY! 🎉','🌟 WOW! NEW ANIMAL! 🌟','🔥 INCREDIBLE FIND! 🔥','⭐ YOU FOUND ONE! ⭐','🏆 AWESOME EXPLORER! 🏆'];
+  document.getElementById('discWow').textContent=wows[Math.floor(Math.random()*wows.length)];
+  document.getElementById('discEmoji').textContent=animal.emoji;
+  document.getElementById('discName').textContent=animal.name;
+  document.getElementById('discFact1').innerHTML='<strong>'+animal.facts[0]+'</strong>';
+  document.getElementById('discFact2').innerHTML=animal.facts[1]||'';
+  document.getElementById('discFact3').innerHTML='<strong>Eats:</strong> '+animal.eats;
+  // Reset image
+  var img=document.getElementById('discImg');
+  img.style.display='none'; img.src='';
+  // Fetch Wikipedia image
+  fetchAnimalImage(animal.name, function(url){
+    if(url){ img.src=url; animal.imageUrl=url; }
+  });
+  document.getElementById('discoveryOverlay').classList.add('active'); playSound('discover');
+}
+
+function fetchAnimalImage(name, cb) {
+  // Try Wikipedia first
+  var url='https://en.wikipedia.org/w/api.php?action=query&titles='+encodeURIComponent(name)+'&prop=pageimages&format=json&pithumbsize=400&origin=*';
+  fetch(url).then(function(r){return r.json();}).then(function(data){
+    var pages=data.query&&data.query.pages;
+    if(!pages) return tryFallback(name,cb);
+    var page=Object.values(pages)[0];
+    if(page&&page.thumbnail&&page.thumbnail.source) cb(page.thumbnail.source);
+    else tryFallback(name,cb);
+  }).catch(function(){tryFallback(name,cb);});
+}
+
+function tryFallback(name, cb) {
+  // Try iNaturalist API as fallback
+  var url2='https://api.inaturalist.org/v1/taxa?q='+encodeURIComponent(name)+'&per_page=1&order_by=observations_count';
+  fetch(url2).then(function(r){return r.json();}).then(function(data){
+    var results=data.results;
+    if(results&&results.length>0&&results[0].default_photo&&results[0].default_photo.medium_url){
+      cb(results[0].default_photo.medium_url);
+    } else {
+      cb(null);
+    }
+  }).catch(function(){cb(null);});
+}
+
+function addToCollectionAndClose() {
+  if(!pendingAnimal) return;
+  var animal=pendingAnimal;
+  pendingAnimal=null;
+  document.getElementById('discoveryOverlay').classList.remove('active');
+  var u={};
+  u['zoo_rooms/'+myRoom+'/animals/'+animal.id]=animal;
+  u['zoo_rooms/'+myRoom+'/lastUpdate']=Date.now();
+  // Update locally immediately for instant UI feedback
+  collection[animal.id]=animal;
+  var animalCount=Object.keys(collection).length;
+  var inZooCount=Object.values(collection).filter(function(a){return a.inZoo;}).length;
+  var tf=document.getElementById('totalFound');
+  var tz=document.getElementById('totalZoo');
+  var zc=document.getElementById('zoneCounter');
+  if(tf) tf.textContent=animalCount;
+  if(tz) tz.textContent=inZooCount;
+  if(zc) zc.textContent='Found: '+animalCount;
+  renderCollStrip();
+  renderCollectionGrid();
+  showToast(animal.name+' added to collection!');
+  // Then sync to Firebase
+  dbUpdate2(u,function(){});
+}
+
+function closeDiscovery() {
+  pendingAnimal=null;
+  document.getElementById('discoveryOverlay').classList.remove('active');
+}
+
+// ═══════════════════════════════════════════
+//  COLLECTION STRIP
+// ═══════════════════════════════════════════
+function renderCollStrip() {
+  var strip=document.getElementById('collStrip');
+  var animals=Object.values(collection);
+  var empEl=document.getElementById('collEmpty');
+  if(animals.length===0){if(empEl)empEl.style.display='block';return;}
+  if(empEl) empEl.style.display='none';
+  strip.querySelectorAll('.coll-animal').forEach(function(el){el.remove();});
+  animals.slice(-10).forEach(function(a){
+    var wrap=document.createElement('div');
+    wrap.className='coll-animal';
+    wrap.title=a.name;
+    wrap.style.cssText='display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;flex-shrink:0;';
+    var imgWrap=document.createElement('div');
+    imgWrap.style.cssText='width:38px;height:38px;border-radius:10px;overflow:hidden;border:2px solid '+(a.inZoo?'rgba(125,222,58,.8)':'rgba(255,255,255,.25)')+';background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;';
+    if(a.imageUrl){
+      var img=document.createElement('img');
+      img.src=a.imageUrl; img.alt=a.name;
+      img.style.cssText='width:100%;height:100%;object-fit:cover;';
+      img.onerror=function(){this.parentNode.innerHTML='<span style="font-size:1.2rem">'+a.emoji+'</span>';};
+      imgWrap.appendChild(img);
+    } else {
+      imgWrap.innerHTML='<span style="font-size:1.2rem">'+a.emoji+'</span>';
+      // lazy load
+      fetchAnimalImage(a.name,function(url){
+        if(url){a.imageUrl=url;imgWrap.innerHTML='';var i2=document.createElement('img');i2.src=url;i2.style.cssText='width:100%;height:100%;object-fit:cover;';imgWrap.appendChild(i2);}
+      });
+    }
+    var lbl=document.createElement('span');
+    lbl.style.cssText='font-size:.45rem;color:rgba(255,255,255,.6);max-width:40px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;';
+    lbl.textContent=a.name;
+    wrap.appendChild(imgWrap);
+    wrap.appendChild(lbl);
+    strip.appendChild(wrap);
+  });
+  document.getElementById('zoneCounter').textContent='Found: '+animals.length;
+}
+
+// ═══════════════════════════════════════════
+//  ZOO BUILDER
+// ═══════════════════════════════════════════
+function renderZooBuilder() {
+  var container=document.getElementById('habitatsContainer');
+  container.innerHTML='';
+  HABITATS.forEach(function(hab){
+    var habZoo=zoo[hab.id]||{cells:{},name:''};
+    var cells=habZoo.cells||{};
+    var sec=document.createElement('div');
+    sec.className='habitat-section';
+
+    // Title row
+    var titleEl=document.createElement('div');
+    titleEl.className='habitat-title';
+    titleEl.style.color='#fff';
+    var placedCount=Object.keys(cells).filter(function(k){return cells[k]&&collection[cells[k]];}).length;
+
+    var titleSpan=document.createElement('span');
+    titleSpan.textContent=hab.emoji+' ';
+    var nameSpan=document.createElement('span');
+    nameSpan.style.flex='1';
+    nameSpan.textContent=hab.name;
+    var countSpan=document.createElement('span');
+    countSpan.style.cssText='font-size:.65rem;color:rgba(125,222,58,.8);margin-right:6px;';
+    countSpan.textContent=placedCount+' animals';
+    titleEl.appendChild(titleSpan);
+    titleEl.appendChild(nameSpan);
+    titleEl.appendChild(countSpan);
+
+    // Grid
+    var gridEl=document.createElement('div');
+    gridEl.className='habitat-grid';
+    gridEl.style.background=hab.color;
+    gridEl.style.borderColor=hab.border;
+
+    for(var i=0;i<GRID_SIZE;i++){
+      var cell=document.createElement('div');
+      var animalId=cells[String(i)]||cells[i]||null;
+      if(animalId&&collection[animalId]){
+        var a=collection[animalId];
+        cell.className='grid-cell occupied';
+        cell.style.position='relative';
+        cell.style.overflow='hidden';
+        cell.style.padding='0';
+        cell.title='Tap to remove '+a.name;
+
+        var cellSpan=document.createElement('span');
+        cellSpan.style.cssText='font-size:1.6rem;position:relative;z-index:1;';
+        cellSpan.textContent=a.emoji;
+        var cellLbl=document.createElement('span');
+        cellLbl.className='cell-label';
+        cellLbl.style.cssText='position:relative;z-index:2;background:rgba(0,0,0,.55);padding:1px 3px;border-radius:4px;';
+        cellLbl.textContent=a.name;
+        cell.appendChild(cellSpan);
+        cell.appendChild(cellLbl);
+
+        if(a.imageUrl){
+          var ci=document.createElement('img');
+          ci.src=a.imageUrl; ci.alt=a.name;
+          ci.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:8px;position:absolute;top:0;left:0;z-index:1;';
+          ci.onerror=function(){this.style.display='none';};
+          cell.insertBefore(ci,cellSpan);
+          cellSpan.style.display='none';
+        }
+
+        cell.onclick=(function(aid,hidx,hid,hname){
+          return function(){openInteract(aid,hid,hidx,hname);};
+        })(animalId,i,hab.id,hab.name);
+      } else {
+        cell.className='grid-cell empty';
+        var plusSpan=document.createElement('span');
+        plusSpan.style.cssText='font-size:.9rem;color:rgba(255,255,255,.15)';
+        plusSpan.textContent='+';
+        cell.appendChild(plusSpan);
+        cell.onclick=(function(hid){return function(){openPicker(hid);};})(hab.id);
+      }
+      gridEl.appendChild(cell);
+    }
+
+    sec.appendChild(titleEl);
+    sec.appendChild(gridEl);
+    container.appendChild(sec);
+  });
+  if(document.getElementById('s-hq').classList.contains('active')) renderHQZoo();
+}
+
+
+function removeFromHabitat(habId, cellIdx, animalId) {
+  // Update local state first
+  if(zoo[habId]&&zoo[habId].cells){
+    delete zoo[habId].cells[cellIdx];
+    delete zoo[habId].cells[String(cellIdx)];
+  }
+  // Check if still in any other habitat
+  var stillInZoo=Object.values(zoo).some(function(h){
+    return h.cells&&Object.values(h.cells).some(function(id){return id===animalId;});
+  });
+  if(collection[animalId]) collection[animalId].inZoo=stillInZoo;
+  renderZooBuilder();
+  renderCollectionGrid();
+  renderCollStrip();
+  var a=collection[animalId];
+  if(a) showToast(a.name+' removed from habitat');
+  // Sync to Firebase
+  var u={};
+  u['zoo_rooms/'+myRoom+'/zoo/'+habId+'/cells/'+String(cellIdx)]=null;
+  if(!stillInZoo) u['zoo_rooms/'+myRoom+'/animals/'+animalId+'/inZoo']=false;
+  u['zoo_rooms/'+myRoom+'/lastUpdate']=Date.now();
+  dbUpdate2(u,function(){});
+}
+
+// ═══════════════════════════════════════════
+//  PLACE PICKER
+// ═══════════════════════════════════════════
+function openPicker(forHabId) {
+  // Show unplaced animals to pick from
+  var unplaced=Object.values(collection).filter(function(a){return !a.inZoo;});
+  if(unplaced.length===0){showToast('Discover more animals first! 🌿');return;}
+  var picker=document.getElementById('placePicker');
+  var container=document.getElementById('pickerHabitats');
+  container.innerHTML='';
+  // Show as a flat grid of animals
+  var titleEl=document.getElementById('pickerTitle');
+  titleEl.textContent='🐾 Pick an animal to place here';
+  var grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;';
+  unplaced.forEach(function(animal){
+    var cell=document.createElement('div');
+    cell.className='picker-cell';
+    cell.style.cssText='background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.2);flex-direction:column;height:auto;padding:.4rem .3rem;aspect-ratio:auto;border-radius:12px;gap:3px;';
+    // Photo wrap
+    var pw=document.createElement('div');
+    pw.style.cssText='width:52px;height:52px;border-radius:10px;overflow:hidden;background:rgba(0,0,0,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;';
+    if(animal.imageUrl){
+      var pimg=document.createElement('img');
+      pimg.src=animal.imageUrl; pimg.alt=animal.name;
+      pimg.style.cssText='width:100%;height:100%;object-fit:cover;';
+      pimg.onerror=function(){this.parentNode.innerHTML='<span style="font-size:1.6rem">'+animal.emoji+'</span>';};
+      pw.appendChild(pimg);
+    } else {
+      pw.innerHTML='<span style="font-size:1.6rem">'+animal.emoji+'</span>';
+    }
+    var lbl=document.createElement('span');
+    lbl.style.cssText='font-size:.55rem;color:rgba(255,255,255,.7);text-align:center;line-height:1.2;max-width:56px;word-break:break-word;';
+    lbl.textContent=animal.name;
+    cell.appendChild(pw);
+    cell.appendChild(lbl);
+    cell.onclick=(function(a){return function(){placeAnimal(forHabId,a.id);closePicker();};})(animal);
+    grid.appendChild(cell);
+  });
+  container.appendChild(grid);
+  picker.classList.add('active');
+}
+
+function placeAnimal(habId, animalId) {
+  var habZoo=zoo[habId]||{cells:{},name:''};
+  var cells=habZoo.cells||{};
+  // Find first empty cell - check BOTH string and number keys
+  var emptyIdx=-1;
+  var normalizedCells=normalizeCells(cells);
+  for(var i=0;i<GRID_SIZE;i++){
+    if(!normalizedCells[String(i)]){emptyIdx=i;break;}
+  }
+  if(emptyIdx===-1){showToast('Habitat is full! Remove an animal first.');return;}
+  var habName=(zoo[habId]&&zoo[habId].name)||HABITATS.find(function(h){return h.id===habId;}).name;
+  // Update local state FIRST for instant feedback
+  if(!zoo[habId]) zoo[habId]={cells:{},name:habName};
+  zoo[habId].cells[String(emptyIdx)]=animalId;
+  if(collection[animalId]) collection[animalId].inZoo=true;
+  renderZooBuilder();
+  renderCollectionGrid();
+  renderCollStrip();
+  var a=collection[animalId];
+  if(a){ showToast(a.name+' placed in the zoo!'); playSound('place'); }
+  // Then sync to Firebase
+  var u={};
+  u['zoo_rooms/'+myRoom+'/zoo/'+habId+'/cells/'+String(emptyIdx)]=animalId;
+  u['zoo_rooms/'+myRoom+'/zoo/'+habId+'/name']=habName;
+  u['zoo_rooms/'+myRoom+'/animals/'+animalId+'/inZoo']=true;
+  u['zoo_rooms/'+myRoom+'/lastUpdate']=Date.now();
+  dbUpdate2(u,function(){});
+}
+
+function closePicker(){document.getElementById('placePicker').classList.remove('active');}
+
+// ═══════════════════════════════════════════
+//  COLLECTION GRID
+// ═══════════════════════════════════════════
+function renderCollectionGrid() {
+  var grid=document.getElementById('collGrid');
+  var empEl=document.getElementById('collEmpty2');
+  var animals=Object.values(collection);
+  if(!grid) return;
+  if(animals.length===0){
+    grid.innerHTML='';
+    if(empEl) empEl.style.display='block';
+    return;
+  }
+  if(empEl) empEl.style.display='none';
+  grid.innerHTML='';
+  animals.forEach(function(a){
+    var z=ZONES.find(function(zn){return zn.id===a.zoneId;})||{emoji:'🌍',id:a.zoneId||'?'};
+    var card=document.createElement('div');
+    card.className='coll-card'+(a.inZoo?' in-zoo':'');
+    card.onclick=function(){openPickerForAnimal(a.id);};
+
+    // Photo container
+    var photoWrap=document.createElement('div');
+    photoWrap.style.cssText='width:72px;height:72px;border-radius:14px;overflow:hidden;margin:0 auto 6px;border:2px solid '+(a.inZoo?'rgba(125,222,58,.6)':'rgba(255,255,255,.2)')+';background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;';
+
+    if(a.imageUrl){
+      var img=document.createElement('img');
+      img.src=a.imageUrl; img.alt=a.name;
+      img.style.cssText='width:100%;height:100%;object-fit:cover;';
+      img.onerror=function(){this.parentNode.innerHTML='<span style="font-size:2rem">'+a.emoji+'</span>';};
+      photoWrap.appendChild(img);
+    } else {
+      photoWrap.innerHTML='<span style="font-size:2rem">'+a.emoji+'</span>';
+      fetchAnimalImage(a.name,function(url){
+        if(!url) return;
+        a.imageUrl=url;
+        photoWrap.innerHTML='';
+        var img2=document.createElement('img');
+        img2.src=url; img2.alt=a.name;
+        img2.style.cssText='width:100%;height:100%;object-fit:cover;';
+        photoWrap.appendChild(img2);
+      });
+    }
+
+    card.appendChild(photoWrap);
+    card.innerHTML+='<div class="coll-name">'+a.name+'</div>'+
+      '<div class="coll-zone">'+z.emoji+' '+z.id+'</div>'+
+      (a.inZoo?'<span class="coll-badge-zoo">✅ In Zoo</span>':'<span style="font-size:.58rem;color:rgba(125,222,58,.7);">Tap to place</span>');
+    grid.appendChild(card);
+  });
+}
+
+
+function openPickerForAnimal(animalId) {
+  var a=collection[animalId];
+  if(!a) return;
+  if(a.inZoo){showToast(a.emoji+' '+a.name+' is already in the zoo! Tap it to move.');return;}
+  // Show habitat picker
+  var picker=document.getElementById('placePicker');
+  var container=document.getElementById('pickerHabitats');
+  container.innerHTML='';
+  document.getElementById('pickerTitle').textContent='🏗️ Place '+a.emoji+' '+a.name+' in...';
+  var grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;';
+  HABITATS.forEach(function(hab){
+    var habZoo=zoo[hab.id]||{cells:{}};
+    var used=Object.keys(habZoo.cells||{}).length;
+    var full=used>=GRID_SIZE;
+    var btn=document.createElement('div');
+    btn.className='picker-cell'+(full?' full':'');
+    btn.style.cssText='background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.2);flex-direction:column;height:auto;aspect-ratio:auto;padding:.8rem .5rem;border-radius:14px;gap:4px;';
+    btn.innerHTML='<span style="font-size:1.6rem">'+hab.emoji+'</span><span style="font-size:.72rem;color:#fff;font-family:Fredoka One,cursive;">'+hab.name+'</span><span style="font-size:.6rem;color:rgba(255,255,255,.4);">'+(full?'FULL':used+'/'+GRID_SIZE+' animals')+'</span>';
+    btn.onclick=(function(h){return function(){placeAnimal(h.id,animalId);closePicker();};})(hab);
+    grid.appendChild(btn);
+  });
+  container.appendChild(grid);
+  picker.classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+//  NAMING
+// ═══════════════════════════════════════════
+
+
+// ═══════════════════════════════════════════
+//  HQ
+// ═══════════════════════════════════════════
+function hqTab(name) {
+  ['feed','zoo','team'].forEach(function(t){
+    document.getElementById('hq-'+t).style.display=t===name?'block':'none';
+  });
+  document.querySelectorAll('.hq-tab').forEach(function(t,i){
+    t.classList.toggle('active',['feed','zoo','team'][i]===name);
+  });
+  if(name==='zoo') renderHQZoo();
+}
+
+function updateHQ(room) {
+  collection=room.animals||{};
+  zoo=room.zoo||{};
+  var animals=Object.values(collection).sort(function(a,b){return (b.discoveredAt||0)-(a.discoveredAt||0);});
+  var feedEl=document.getElementById('feedList');
+  if(animals.length===0){
+    feedEl.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.3);font-size:.85rem;padding:2rem;">Waiting for the explorer to find animals... 🐾</div>';
+  } else {
+    feedEl.innerHTML=animals.map(function(a,i){
+      var z=ZONES.find(function(z){return z.id===a.zoneId;})||ZONES[0];
+      return '<div class="feed-card">'+
+        '<div class="feed-emoji" style="width:48px;height:48px;border-radius:10px;overflow:hidden;flex-shrink:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;">'+(a.imageUrl?'<img src="'+a.imageUrl+'" style="width:100%;height:100%;object-fit:cover;" alt="'+a.name+'"/>':'<span style="font-size:1.6rem">'+a.emoji+'</span>')+'</div>'+
+        '<div style="flex:1;">'+
+          '<div class="feed-zone">'+z.emoji+' '+z.name+(i===0?'<span class="new-pill">NEW</span>':'')+'</div>'+
+          '<div class="feed-name">'+a.name+'</div>'+
+          '<div class="feed-fact">'+a.facts[0]+'</div>'+
+          '<div class="feed-fact" style="margin-top:3px;">'+a.facts[1]+'</div>'+
+          (a.inZoo?'<div style="color:#7dde3a;font-size:.72rem;margin-top:4px;">✅ In the zoo!</div>':'')+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+  // Team
+  var players=room.players?Object.values(room.players):[];
+  document.getElementById('hqTeam').innerHTML=players.map(function(p){
+    var b=p.role==='explorer'?'<span class="badge badge-e">EXPLORER</span>':p.role==='host'?'<span class="badge badge-h">HOST</span>':'<span class="badge badge-q">HQ</span>';
+    return '<div class="player-row"><span style="font-size:1.3rem">'+p.emoji+'</span><span style="font-weight:700;font-size:.9rem;flex:1;color:#fff;">'+p.name+'</span>'+b+'</div>';
+  }).join('');
+  renderHQZoo();
+}
+
+function renderHQZoo() {
+  var el=document.getElementById('hqZooPreview'); if(!el) return;
+  el.innerHTML=HABITATS.map(function(hab){
+    var habZoo=zoo[hab.id]||{cells:{}};
+    var animals=Object.values(habZoo.cells||{}).map(function(id){return collection[id];}).filter(Boolean);
+    var name=(habZoo.name&&habZoo.name!==hab.name)?habZoo.name:hab.name;
+    return '<div class="hq-hab-card">'+
+      '<span class="hq-hab-icon">'+hab.emoji+'</span>'+
+      '<div class="hq-hab-name">'+name+'</div>'+
+      '<div class="hq-hab-count">'+animals.length+' animals</div>'+
+      '<div class="hq-hab-animals">'+animals.slice(0,4).map(function(a){return a.emoji;}).join(' ')+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+function navTo(name) {
+  activeGameScreen=name;
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  var nb=document.getElementById('nav-'+name);
+  if(nb) nb.classList.add('active');
+  if(name==='zone') { document.getElementById('mainBg').className='bg '+ZONES[currentZoneIdx].bg; }
+  else { document.getElementById('mainBg').className='bg bg-zoo'; stopAmbient(); }
+}
+
+function zooTab(name){
+  ['habitats','build','collection'].forEach(function(t){
+    document.getElementById('zt-'+t).style.display=t===name?'block':'none';
+  });
+  document.querySelectorAll('.zoo-tab').forEach(function(t,i){
+    t.classList.toggle('active',['habitats','build','collection'][i]===name);
+  });
+  if(name==='build') renderBuildTab();
+}
+
+// ═══════════════════════════════════════════
+//  ZONE NAV BUTTONS (rendered in bottom nav)
+// ═══════════════════════════════════════════
+function goNextZone(){
+  var next=(currentZoneIdx+1)%ZONES.length;
+  var z=ZONES[next];
+  var trans=document.getElementById('zoneTrans');
+  document.getElementById('transIcon').textContent=z.emoji;
+  document.getElementById('transName').textContent=z.name;
+  document.getElementById('transSub').textContent='New zone!';
+  trans.classList.add('active');
+  setTimeout(function(){
+    setZone(next);
+    setTimeout(function(){trans.classList.remove('active');},600);
+  },900);
+}
+
+// ═══════════════════════════════════════════
+//  TOAST & UTILS
+// ═══════════════════════════════════════════
+function showToast(text){
+  var t=document.getElementById('toast');
+  document.getElementById('toastText').textContent=text;
+  t.classList.add('show');
+  if(t._timer) clearTimeout(t._timer);
+  t._timer=setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+// ═══════════════════════════════════════════
+//  INTERACT SYSTEM
+// ═══════════════════════════════════════════
+function getOrInitMood(animalId) {
+  if(!animalMoods[animalId]) {
+    animalMoods[animalId]={hunger:80,happy:80,lastFed:Date.now()-3600000,lastPlayed:Date.now()-3600000,decor:[]};
+  }
+  // Decay mood over time
+  var now=Date.now();
+  var m=animalMoods[animalId];
+  var hoursSinceFed=(now-m.lastFed)/3600000;
+  var hoursSincePlayed=(now-m.lastPlayed)/3600000;
+  m.hunger=Math.max(10,100-hoursSinceFed*15);
+  m.happy=Math.max(10,100-hoursSincePlayed*10);
+  return m;
+}
+
+function openInteract(animalId, habId, cellIdx, habName) {
+  var a=collection[animalId];
+  if(!a) return;
+  interactModal={animalId:animalId,habId:habId,cellIdx:cellIdx};
+  var m=getOrInitMood(animalId);
+
+  // Photo
+  var photoEl=document.getElementById('interactPhoto');
+  photoEl.innerHTML='';
+  if(a.imageUrl){
+    var img=document.createElement('img');
+    img.src=a.imageUrl; img.style.cssText='width:100%;height:100%;object-fit:cover;';
+    photoEl.appendChild(img);
+  } else {
+    photoEl.innerHTML='<span style="font-size:2rem">'+a.emoji+'</span>';
+  }
+  document.getElementById('interactName').textContent=a.name;
+
+  // Mood bars
+  var moodHtml='<div style="display:flex;flex-direction:column;gap:3px;">';
+  moodHtml+='<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:.7rem;width:20px;">🍖</span><div style="flex:1;height:7px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;"><div style="height:100%;width:'+m.hunger+'%;background:'+getBarColor(m.hunger)+';border-radius:4px;transition:width .5s;"></div></div><span style="font-size:.6rem;color:rgba(255,255,255,.5);width:24px;">'+Math.round(m.hunger)+'%</span></div>';
+  moodHtml+='<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:.7rem;width:20px;">💚</span><div style="flex:1;height:7px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;"><div style="height:100%;width:'+m.happy+'%;background:'+getBarColor(m.happy)+';border-radius:4px;transition:width .5s;"></div></div><span style="font-size:.6rem;color:rgba(255,255,255,.5);width:24px;">'+Math.round(m.happy)+'%</span></div>';
+  moodHtml+='</div>';
+  document.getElementById('moodBar').innerHTML=moodHtml;
+
+  // Action buttons
+  var actEl=document.getElementById('interactActions');
+  actEl.innerHTML='';
+  var actions=[
+    {icon:'🍖',label:'Feed',color:'rgba(230,120,0,.8)',fn:'feedAnimal("'+animalId+'")'},
+    {icon:'🎾',label:'Play',color:'rgba(50,150,220,.8)',fn:'playAnimal("'+animalId+'")'},
+    {icon:'🛁',label:'Bath',color:'rgba(50,180,180,.8)',fn:'bathAnimal("'+animalId+'")'},
+    {icon:'🎵',label:'Sing',color:'rgba(150,50,220,.8)',fn:'singAnimal("'+animalId+'")'},
+    {icon:'📸',label:'Photo',color:'rgba(80,180,80,.8)',fn:'photoAnimal("'+animalId+'")'},
+    {icon:'🗑️',label:'Remove',color:'rgba(180,40,40,.5)',fn:'removeFromHabitat("'+habId+'",'+cellIdx+',"'+animalId+'");closeInteract();'}
+  ];
+  actions.forEach(function(act){
+    var btn=document.createElement('button');
+    btn.style.cssText='background:'+act.color+';border:none;border-radius:14px;padding:.7rem;cursor:pointer;font-family:"Nunito",sans-serif;font-size:.8rem;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;gap:5px;';
+    btn.innerHTML='<span style="font-size:1.2rem">'+act.icon+'</span> '+act.label;
+    btn.setAttribute('onclick',act.fn);
+    actEl.appendChild(btn);
+  });
+
+  document.getElementById('interactModal').classList.add('active');
+}
+
+function refreshInteractDecor(animalId,habId,cellIdx){
+  var m=animalMoods[animalId];
+  var cdEl=document.getElementById('currentDecor');
+  if(!m||!m.decor||m.decor.length===0){cdEl.textContent='No decorations yet — add some!';cdEl.style.color='rgba(255,255,255,.3)';return;}
+  var items=HABITAT_ITEMS[habId]||[];
+  var names=m.decor.map(function(id){var it=items.find(function(x){return x.id===id;});return it?it.emoji+' '+it.name:id;});
+  cdEl.innerHTML='<span style="color:rgba(125,222,58,.7);">In habitat: </span>'+names.join(' · ');
+}
+
+function getBarColor(val){
+  if(val>60) return '#7dde3a';
+  if(val>30) return '#ffcc00';
+  return '#ff4444';
+}
+
+function addDecor(animalId,item){
+  var m=getOrInitMood(animalId);
+  if(!m.decor) m.decor=[];
+  if(!m.decor.includes(item.id)){
+    m.decor.push(item.id);
+    m.happy=Math.min(100,m.happy+15);
+    showToast(item.emoji+' Added '+item.name+' to habitat! Happiness +15!');
+  } else {
+    m.decor=m.decor.filter(function(d){return d!==item.id;});
+    showToast(item.emoji+' Removed '+item.name+' from habitat');
+  }
+  // Refresh mood bars
+  if(document.getElementById('interactModal').classList.contains('active')) {
+    document.getElementById('moodBar').querySelector('div div div').style.width=m.happy+'%';
+  }
+}
+
+function feedAnimal(animalId){
+  var a=collection[animalId]; if(!a) return;
+  var m=getOrInitMood(animalId);
+  m.hunger=Math.min(100,m.hunger+40);
+  m.happy=Math.min(100,m.happy+10);
+  m.lastFed=Date.now();
+  showToast('🍖 You fed the '+a.name+'! It loves you!'); playSound('feed');
+  if(document.getElementById('interactModal').classList.contains('active')) openInteract(animalId,interactModal.habId,interactModal.cellIdx);
+}
+
+function playAnimal(animalId){
+  var a=collection[animalId]; if(!a) return;
+  var m=getOrInitMood(animalId);
+  m.happy=Math.min(100,m.happy+35);
+  m.lastPlayed=Date.now();
+  var reactions=['🎉 The '+a.name+' is doing happy jumps!','😄 The '+a.name+' wants to play more!','🌟 The '+a.name+' is SO happy right now!','🥳 Best day ever for your '+a.name+'!'];
+  showToast(reactions[Math.floor(Math.random()*reactions.length)]); playSound('play');
+  if(document.getElementById('interactModal').classList.contains('active')) openInteract(animalId,interactModal.habId,interactModal.cellIdx);
+}
+
+function bathAnimal(animalId){
+  var a=collection[animalId]; if(!a) return;
+  var m=getOrInitMood(animalId);
+  m.happy=Math.min(100,m.happy+20);
+  showToast('🛁 Splish splash! '+a.name+' is squeaky clean!'); playSound('bath');
+  if(document.getElementById('interactModal').classList.contains('active')) openInteract(animalId,interactModal.habId,interactModal.cellIdx);
+}
+
+function singAnimal(animalId){
+  var a=collection[animalId]; if(!a) return;
+  var m=getOrInitMood(animalId);
+  m.happy=Math.min(100,m.happy+25);
+  var songs=['🎵 The '+a.name+' joins in with its own sounds!','🎶 The '+a.name+' dances along to your singing!','🎤 The '+a.name+' has never heard anything so beautiful!'];
+  showToast(songs[Math.floor(Math.random()*songs.length)]);
+  playSingJingle();
+  if(document.getElementById('interactModal').classList.contains('active')) openInteract(animalId,interactModal.habId,interactModal.cellIdx);
+}
+
+function playSingJingle(){
+  var ctx=getAudioCtx(); if(!ctx) return;
+  try {
+    // Happy do-re-mi-fa-sol-fa-mi-re-do jingle
+    var notes=[261,293,329,349,392,349,329,293,261];
+    var now=ctx.currentTime;
+    notes.forEach(function(freq,i){
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='triangle'; o.frequency.value=freq;
+      var t=now+i*0.13;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.22,t+0.04);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t+0.13);
+      // Add harmony a third above
+      var o2=ctx.createOscillator(),g2=ctx.createGain();
+      o2.type='sine'; o2.frequency.value=freq*1.25;
+      g2.gain.setValueAtTime(0,t);
+      g2.gain.linearRampToValueAtTime(0.08,t+0.04);
+      g2.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+      o2.connect(g2); g2.connect(ctx.destination);
+      o2.start(t); o2.stop(t+0.13);
+    });
+  } catch(e){}
+}
+
+function photoAnimal(animalId){
+  var a=collection[animalId]; if(!a) return;
+  var m=getOrInitMood(animalId);
+  m.happy=Math.min(100,m.happy+5);
+  showToast('📸 Cheese! '+a.name+' posed perfectly for the camera!');
+  // Resume context in case it was suspended, then play
+  var ctx=getAudioCtx();
+  if(ctx && ctx.state==='suspended'){
+    ctx.resume().then(function(){ playShutter(); });
+  } else {
+    playShutter();
+  }
+}
+
+function playShutter(){
+  var ctx=getAudioCtx(); if(!ctx) return;
+  try {
+    var now=ctx.currentTime;
+    var sr=ctx.sampleRate;
+    // Shutter open — sharp mechanical snap with quick decay
+    var buf=ctx.createBuffer(1,Math.floor(sr*0.055),sr);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++){
+      var t=i/sr;
+      // Mix of noise burst + low thud
+      d[i]=(Math.random()*2-1)*0.9*Math.exp(-t/0.004)
+           + (Math.random()*2-1)*0.4*Math.exp(-t/0.018)
+           + Math.sin(2*Math.PI*180*t)*0.3*Math.exp(-t/0.012);
+    }
+    var src=ctx.createBufferSource();
+    var g=ctx.createGain(); g.gain.value=0.55;
+    src.buffer=buf; src.connect(g); g.connect(ctx.destination); src.start(now);
+
+    // Shutter close — softer snap ~80ms later
+    var buf2=ctx.createBuffer(1,Math.floor(sr*0.04),sr);
+    var d2=buf2.getChannelData(0);
+    for(var j=0;j<d2.length;j++){
+      var t2=j/sr;
+      d2[j]=(Math.random()*2-1)*0.7*Math.exp(-t2/0.003)
+            + Math.sin(2*Math.PI*220*t2)*0.2*Math.exp(-t2/0.01);
+    }
+    var src2=ctx.createBufferSource();
+    var g2=ctx.createGain(); g2.gain.value=0.35;
+    src2.buffer=buf2; src2.connect(g2); g2.connect(ctx.destination); src2.start(now+0.085);
+
+    // Mirror slap — low resonant thud right after close
+    var osc=ctx.createOscillator(),gm=ctx.createGain();
+    osc.type='sine'; osc.frequency.setValueAtTime(95,now+0.09);
+    osc.frequency.exponentialRampToValueAtTime(55,now+0.22);
+    gm.gain.setValueAtTime(0.18,now+0.09);
+    gm.gain.exponentialRampToValueAtTime(0.001,now+0.22);
+    osc.connect(gm); gm.connect(ctx.destination); osc.start(now+0.09); osc.stop(now+0.23);
+  } catch(e){}
+}
+
+function closeInteract(){
+  interactModal=null;
+  document.getElementById('interactModal').classList.remove('active');
+}
+
+// ═══════════════════════════════════════════
+//  BUILD TAB
+// ═══════════════════════════════════════════
+var BUILD_PALETTE = {
+  jungle:     [{e:'🌳',n:'Tree',bg:'rgba(20,80,10,.6)'},{e:'🌿',n:'Bush',bg:'rgba(15,70,8,.5)'},{e:'💧',n:'Water',bg:'rgba(10,60,120,.5)'},{e:'🪵',n:'Log',bg:'rgba(80,50,20,.5)'},{e:'🌸',n:'Flower',bg:'rgba(120,30,80,.4)'},{e:'🍄',n:'Mushroom',bg:'rgba(160,60,20,.4)'},{e:'🪨',n:'Rock',bg:'rgba(60,60,60,.5)'},{e:'🛖',n:'Shelter',bg:'rgba(100,70,20,.5)'},{e:'🌺',n:'Bloom',bg:'rgba(140,20,60,.4)'},{e:'🎋',n:'Bamboo',bg:'rgba(30,100,20,.5)'},{e:'🦋',n:'Butterfly',bg:'rgba(80,20,120,.3)'},{e:'🕳️',n:'Burrow',bg:'rgba(40,25,10,.6)'}],
+  ocean:      [{e:'🪸',n:'Coral',bg:'rgba(180,60,60,.5)'},{e:'🌿',n:'Kelp',bg:'rgba(10,100,40,.5)'},{e:'🪨',n:'Rock',bg:'rgba(40,50,70,.5)'},{e:'🐚',n:'Shell',bg:'rgba(180,140,60,.4)'},{e:'💧',n:'Pool',bg:'rgba(10,40,100,.6)'},{e:'🫧',n:'Bubbles',bg:'rgba(60,140,180,.3)'},{e:'🏝️',n:'Sandbar',bg:'rgba(180,160,80,.4)'},{e:'⭐',n:'Starfish',bg:'rgba(200,100,20,.4)'},{e:'🪝',n:'Anchor',bg:'rgba(60,60,80,.5)'},{e:'🐠',n:'Fish',bg:'rgba(200,80,20,.3)'},{e:'🕳️',n:'Cave',bg:'rgba(20,20,40,.7)'},{e:'🏔️',n:'Ridge',bg:'rgba(40,60,80,.6)'}],
+  savanna:    [{e:'🌾',n:'Grass',bg:'rgba(140,100,20,.5)'},{e:'🌳',n:'Acacia',bg:'rgba(30,80,10,.5)'},{e:'🪨',n:'Rock',bg:'rgba(80,70,50,.5)'},{e:'💧',n:'Watering Hole',bg:'rgba(20,60,100,.5)'},{e:'🌵',n:'Cactus',bg:'rgba(40,100,30,.5)'},{e:'🦴',n:'Bones',bg:'rgba(200,180,140,.4)'},{e:'🕳️',n:'Burrow',bg:'rgba(80,50,20,.6)'},{e:'🌻',n:'Sunflower',bg:'rgba(180,140,10,.4)'},{e:'🪺',n:'Nest',bg:'rgba(100,70,30,.4)'},{e:'🏕️',n:'Shelter',bg:'rgba(120,80,30,.5)'},{e:'🔥',n:'Fire',bg:'rgba(180,60,10,.4)'},{e:'🌿',n:'Bush',bg:'rgba(50,90,20,.5)'}],
+  arctic:     [{e:'🧊',n:'Ice Block',bg:'rgba(120,160,200,.5)'},{e:'❄️',n:'Snow',bg:'rgba(180,200,220,.4)'},{e:'🪨',n:'Rock',bg:'rgba(60,70,90,.5)'},{e:'💧',n:'Ice Pool',bg:'rgba(40,80,140,.5)'},{e:'🏔️',n:'Iceberg',bg:'rgba(80,120,160,.5)'},{e:'🌊',n:'Wave',bg:'rgba(20,60,120,.5)'},{e:'🕳️',n:'Den',bg:'rgba(30,40,60,.7)'},{e:'🐟',n:'Fish',bg:'rgba(80,120,160,.4)'},{e:'🌿',n:'Moss',bg:'rgba(40,80,40,.4)'},{e:'⭐',n:'Aurora',bg:'rgba(20,120,80,.3)'},{e:'🏕️',n:'Shelter',bg:'rgba(60,80,100,.5)'},{e:'🪨',n:'Boulder',bg:'rgba(50,60,80,.6)'}],
+  rainforest: [{e:'🌴',n:'Palm',bg:'rgba(20,100,20,.6)'},{e:'🌺',n:'Flower',bg:'rgba(160,20,80,.4)'},{e:'💧',n:'Stream',bg:'rgba(10,60,140,.5)'},{e:'🍄',n:'Mushroom',bg:'rgba(160,60,20,.5)'},{e:'🌿',n:'Fern',bg:'rgba(20,100,30,.5)'},{e:'🪵',n:'Log',bg:'rgba(80,50,20,.5)'},{e:'🦜',n:'Parrot',bg:'rgba(20,100,20,.3)'},{e:'🌸',n:'Orchid',bg:'rgba(140,20,100,.4)'},{e:'🕳️',n:'Hollow',bg:'rgba(40,25,10,.6)'},{e:'🎋',n:'Bamboo',bg:'rgba(30,110,20,.5)'},{e:'🏕️',n:'Shelter',bg:'rgba(30,70,20,.5)'},{e:'🌫️',n:'Mist',bg:'rgba(140,160,140,.25)'}]
+};
+
+var buildState = {}; // {habId: {grid: {}, selectedItem: null, tool: 'paint'}}
+var activeBuildHab = 'jungle';
+var BUILD_COLS = 6;
+var BUILD_ROWS = 7;
+var isPainting = false;
+var buildDragAnimalKey = null;
+var buildDragAnimalId = null;
+
+function renderBuildTab() {
+  var container = document.getElementById('buildContainer');
+  container.innerHTML = '';
+
+  // Habitat selector
+  var habSel = document.createElement('div');
+  habSel.className = 'build-hab-sel';
+  HABITATS.forEach(function(hab) {
+    var btn = document.createElement('button');
+    btn.className = 'build-hab-btn' + (hab.id === activeBuildHab ? ' active' : '');
+    btn.textContent = hab.emoji + ' ' + hab.name.replace(' Habitat','');
+    btn.onclick = (function(hid){ return function(){ activeBuildHab=hid; renderBuildTab();  }; })(hab.id);
+    habSel.appendChild(btn);
+  });
+  container.appendChild(habSel);
+
+  var hab = HABITATS.find(function(h){ return h.id===activeBuildHab; }) || HABITATS[0];
+  if(!buildState[activeBuildHab]) buildState[activeBuildHab]={grid:{},selectedItem:null,tool:'paint'};
+  var state = buildState[activeBuildHab];
+
+  // Toolbar
+  var toolbar = document.createElement('div');
+  toolbar.className = 'build-toolbar';
+  [{id:'paint',label:'✏️ Paint'},{id:'erase',label:'🧹 Erase'}].forEach(function(t){
+    var tb = document.createElement('button');
+    tb.className = 'tool-btn' + (state.tool===t.id?' active':'');
+    tb.textContent = t.label;
+    tb.onclick = (function(tid){ return function(){ state.tool=tid; renderBuildTab();  }; })(t.id);
+    toolbar.appendChild(tb);
+  });
+  var clearBtn = document.createElement('button');
+  clearBtn.className = 'tool-btn';
+  clearBtn.textContent = '🗑️ Clear';
+  clearBtn.style.marginLeft = 'auto';
+  clearBtn.onclick = function(){ if(confirm('Clear this habitat?')){ buildState[activeBuildHab].grid={}; renderBuildTab(); playSound('build'); } };
+  toolbar.appendChild(clearBtn);
+  container.appendChild(toolbar);
+
+  // Palette
+  var palWrap = document.createElement('div');
+  palWrap.className = 'build-palette';
+  var items = BUILD_PALETTE[activeBuildHab] || BUILD_PALETTE['jungle'];
+  items.forEach(function(item){
+    var pi = document.createElement('div');
+    pi.className = 'palette-item' + (state.selectedItem && state.selectedItem.e===item.e ? ' selected' : '');
+    pi.innerHTML = '<span class="palette-emoji">'+item.e+'</span><span class="palette-lbl">'+item.n+'</span>';
+    pi.onclick = (function(it){ return function(){ state.selectedItem=it; state.tool='paint'; renderBuildTab();  }; })(item);
+    palWrap.appendChild(pi);
+  });
+  container.appendChild(palWrap);
+
+  // Canvas
+  var canvasWrap = document.createElement('div');
+  canvasWrap.className = 'build-canvas-wrap';
+  canvasWrap.style.background = hab.color.replace('.3','.6');
+
+  var canvas = document.createElement('div');
+  canvas.className = 'build-canvas';
+  canvas.style.gridTemplateColumns = 'repeat('+BUILD_COLS+',1fr)';
+
+  // Place discovered animals in bottom row
+  var habAnimals = Object.values(collection).filter(function(a){ return a.inZoo && a.zoneId===activeBuildHab; }).slice(0,BUILD_COLS);
+
+  for(var r=0; r<BUILD_ROWS; r++){
+    for(var c=0; c<BUILD_COLS; c++){
+      var key = r+','+c;
+      var cell = document.createElement('div');
+      cell.className = 'build-cell';
+      cell.dataset.key = key;
+      cell.style.background = 'rgba(255,255,255,.04)';
+      cell.style.border = '1px solid rgba(255,255,255,.06)';
+      var content2 = state.grid[key] || '';
+      var animalHere = state.animals && state.animals[key] ? state.animals[key] : null;
+      var animObj = animalHere ? collection[animalHere] : null;
+
+      if(animObj){
+        cell.style.background='rgba(125,222,58,.12)';
+        cell.style.border='1.5px solid rgba(125,222,58,.35)';
+        cell.style.position='relative'; cell.style.padding='2px';
+        if(animObj.imageUrl){
+          cell.innerHTML='<img src="'+animObj.imageUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" alt="'+animObj.name+'"/><span style="position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:.38rem;color:#fff;background:rgba(0,0,0,.55);border-radius:0 0 4px 4px;padding:0 1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+animObj.name+'</span>';
+        } else {
+          cell.innerHTML='<span style="font-size:1.4rem">'+animObj.emoji+'</span>';
+        }
+        cell.addEventListener('click',(function(a){ return function(e){ e.stopPropagation(); playAnimalSound(a); showToast(a.name+'!'); }; })(animObj));
+        // Desktop drag
+        cell.setAttribute('draggable','true');
+        cell.addEventListener('dragstart',(function(k,aid){ return function(e){ 
+          e.dataTransfer.setData('animalKey',k); 
+          e.dataTransfer.setData('animalId',aid); 
+          e.dataTransfer.effectAllowed='move';
+          setTimeout(function(){cell.style.opacity='.4';},0);
+        }; })(key,animalHere));
+        cell.addEventListener('dragend',function(){ cell.style.opacity='1'; });
+        // Touch drag - long press then slide finger to target cell
+        (function(k,aid){
+          var touchTimer=null, touchMoved=false;
+          cell.addEventListener('touchstart',function(e){
+            touchMoved=false;
+            touchTimer=setTimeout(function(){
+              buildDragAnimalKey=k; buildDragAnimalId=aid;
+              cell.style.opacity='.4';
+              showToast('Slide to a new spot!');
+              // Vibrate if supported
+              if(navigator.vibrate) navigator.vibrate(40);
+            },450);
+          },{passive:true});
+          cell.addEventListener('touchmove',function(e){
+            touchMoved=true;
+            if(!buildDragAnimalKey) return;
+            e.preventDefault();
+            var touch=e.touches[0];
+            var el=document.elementFromPoint(touch.clientX,touch.clientY);
+            // Highlight target cell
+            document.querySelectorAll('.build-cell').forEach(function(c){c.style.outline='';});
+            if(el&&el.classList.contains('build-cell')&&el.dataset.key!==k){
+              el.style.outline='2px solid #ffcc00';
+            }
+          },{passive:false});
+          cell.addEventListener('touchend',function(e){
+            clearTimeout(touchTimer);
+            document.querySelectorAll('.build-cell').forEach(function(c){c.style.outline='';});
+            if(buildDragAnimalKey && touchMoved){
+              var touch=e.changedTouches[0];
+              var target=document.elementFromPoint(touch.clientX,touch.clientY);
+              if(target&&target.classList.contains('build-cell')&&target.dataset.key!==k){
+                var destKey=target.dataset.key;
+                if(!buildState[activeBuildHab].animals) buildState[activeBuildHab].animals={};
+                delete buildState[activeBuildHab].animals[k];
+                buildState[activeBuildHab].animals[destKey]=aid;
+                playSound('place'); renderBuildTab();
+              }
+            }
+            buildDragAnimalKey=null; buildDragAnimalId=null;
+            cell.style.opacity='1';
+          },{passive:true});
+        })(key,animalHere);
+      } else if(content2){
+        var foundItem=(BUILD_PALETTE[activeBuildHab]||[]).find(function(i){return i.e===content2;});
+        cell.style.background=foundItem?foundItem.bg:'rgba(125,222,58,.2)';
+        cell.style.border='1px solid rgba(255,255,255,.1)';
+        cell.textContent=content2;
+      }
+
+      // Drop target
+      cell.addEventListener('dragover',function(e){e.preventDefault();e.dataTransfer.dropEffect='move';this.style.outline='2px solid #ffcc00';});
+      cell.addEventListener('dragleave',function(){this.style.outline='';});
+      cell.addEventListener('drop',(function(k){return function(e){
+        e.preventDefault(); this.style.outline='';
+        var fromKey=e.dataTransfer.getData('animalKey');
+        var aid=e.dataTransfer.getData('animalId');
+        var trayId=e.dataTransfer.getData('trayAnimalId');
+        if(trayId){ // from animal tray
+          if(!buildState[activeBuildHab].animals) buildState[activeBuildHab].animals={};
+          buildState[activeBuildHab].animals[k]=trayId;
+          playSound('place'); renderBuildTab();
+        } else if(fromKey&&aid&&fromKey!==k){ // move existing
+          if(!buildState[activeBuildHab].animals) buildState[activeBuildHab].animals={};
+          delete buildState[activeBuildHab].animals[fromKey];
+          buildState[activeBuildHab].animals[k]=aid;
+          playSound('place'); renderBuildTab();
+        }
+      };})(key));
+
+      // Touch + paint
+      (function(k){
+        var painted=false;
+        cell.addEventListener('touchstart',function(e){
+          if(!animObj){isPainting=true; if(!painted){painted=true;paintCell(k);}}
+        },{passive:true});
+        cell.addEventListener('touchend',function(){painted=false;},{passive:true});
+        cell.addEventListener('mouseover',function(){
+          if(isPainting&&!animObj&&!painted){painted=true;paintCell(k);}
+        });
+        cell.addEventListener('mousedown',function(e){
+          if(!animObj){isPainting=true;if(!painted){painted=true;paintCell(k);}}
+        });
+        cell.addEventListener('mouseup',function(){painted=false;});
+      })(key);
+
+      canvas.appendChild(cell);
+    }
+  }
+  canvasWrap.appendChild(canvas);
+  container.appendChild(canvasWrap);
+
+  // Animal tray — all zoo animals, drag onto grid
+  var allZooAnimals = Object.values(collection).filter(function(a){ return a.inZoo; });
+  // Also include animals already on THIS grid
+  var onGrid = Object.values((buildState[activeBuildHab]&&buildState[activeBuildHab].animals)||{});
+
+  if(allZooAnimals.length > 0){
+    var trayLabel = document.createElement('div');
+    trayLabel.style.cssText='font-family:"Fredoka One",cursive;font-size:.78rem;color:rgba(255,204,0,.8);margin-bottom:6px;';
+    trayLabel.textContent='🐾 Drag animals onto your habitat:';
+    container.appendChild(trayLabel);
+
+    var tray = document.createElement('div');
+    tray.style.cssText='display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;';
+    allZooAnimals.forEach(function(a){
+      var item = document.createElement('div');
+      item.style.cssText='flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:grab;';
+      // Desktop drag from tray
+      item.setAttribute('draggable','true');
+      item.addEventListener('dragstart',(function(aid){ return function(e){
+        e.dataTransfer.setData('trayAnimalId', aid);
+        e.dataTransfer.effectAllowed='copy';
+      };})(a.id));
+      // Touch drag from tray
+      (function(aid){
+        var trayTouchTimer=null;
+        item.addEventListener('touchstart',function(e){
+          trayTouchTimer=setTimeout(function(){
+            buildDragAnimalKey='__tray__';
+            buildDragAnimalId=aid;
+            item.style.opacity='.4';
+            if(navigator.vibrate) navigator.vibrate(40);
+            showToast('Slide to place in habitat!');
+          },400);
+        },{passive:true});
+        item.addEventListener('touchmove',function(e){
+          if(!buildDragAnimalKey) return;
+          e.preventDefault();
+          var touch=e.touches[0];
+          document.querySelectorAll('.build-cell').forEach(function(c){c.style.outline='';});
+          var el=document.elementFromPoint(touch.clientX,touch.clientY);
+          if(el&&el.classList.contains('build-cell')) el.style.outline='2px solid #ffcc00';
+        },{passive:false});
+        item.addEventListener('touchend',function(e){
+          clearTimeout(trayTouchTimer);
+          document.querySelectorAll('.build-cell').forEach(function(c){c.style.outline='';});
+          item.style.opacity='1';
+          if(buildDragAnimalKey==='__tray__'){
+            var touch=e.changedTouches[0];
+            var target=document.elementFromPoint(touch.clientX,touch.clientY);
+            if(target&&target.classList.contains('build-cell')){
+              if(!buildState[activeBuildHab].animals) buildState[activeBuildHab].animals={};
+              buildState[activeBuildHab].animals[target.dataset.key]=aid;
+              playSound('place'); renderBuildTab();
+            }
+          }
+          buildDragAnimalKey=null; buildDragAnimalId=null;
+        },{passive:true});
+      })(a.id);
+      var photoWrap = document.createElement('div');
+      photoWrap.style.cssText='width:44px;height:44px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.2);background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;';
+      if(a.imageUrl){
+        var img=document.createElement('img'); img.src=a.imageUrl; img.alt=a.name;
+        img.style.cssText='width:100%;height:100%;object-fit:cover;';
+        photoWrap.appendChild(img);
+      } else {
+        photoWrap.innerHTML='<span style="font-size:1.4rem">'+a.emoji+'</span>';
+      }
+      var lbl = document.createElement('span');
+      lbl.style.cssText='font-size:.45rem;color:rgba(255,255,255,.5);max-width:46px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;';
+      lbl.textContent=a.name;
+      item.appendChild(photoWrap); item.appendChild(lbl);
+      tray.appendChild(item);
+    });
+    container.appendChild(tray);
+
+    // Wire tray drops onto canvas cells (add dragover/drop to accept trayAnimalId)
+    canvas.querySelectorAll('.build-cell').forEach(function(cell){
+      cell.addEventListener('drop',function(e){
+        var trayId = e.dataTransfer.getData('trayAnimalId');
+        if(trayId){
+          e.preventDefault(); this.style.outline='';
+          var k=this.dataset.key;
+          if(!buildState[activeBuildHab].animals) buildState[activeBuildHab].animals={};
+          buildState[activeBuildHab].animals[k]=trayId;
+          playSound('place'); renderBuildTab();
+        }
+      });
+    });
+  } else {
+    var hint = document.createElement('div');
+    hint.style.cssText='text-align:center;font-size:.72rem;color:rgba(255,255,255,.3);padding:.5rem;';
+    hint.textContent='Place animals in habitats from the Animals tab to see them here!';
+    container.appendChild(hint);
+  }
+}
+
+function paintCell(key) {
+  if(!buildState[activeBuildHab]) return;
+  var state = buildState[activeBuildHab];
+  if(state.tool==='erase') {
+    delete state.grid[key];
+    if(navigator.vibrate) navigator.vibrate(15);
+  } else if(state.selectedItem) {
+    state.grid[key] = state.selectedItem.e;
+    if(navigator.vibrate) navigator.vibrate(20);
+  } else {
+    showToast('Pick an item from the palette first!');
+    return;
+  }
+  renderBuildTab();
+}
+
+// ═══════════════════════════════════════════
+//  AUDIO SYSTEM
+// ═══════════════════════════════════════════
+var audioCtx = null;
+var ambientSource = null;
+var audioEnabled = false;
+var currentZoneAudio = null;
+
+function getAudioCtx() {
+  if(!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+  }
+  return audioCtx;
+}
+
+// Synthesized sound effects using Web Audio API
+function playSound(type) {
+  var ctx = getAudioCtx(); if(!ctx) return;
+  try {
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    var now = ctx.currentTime;
+    if(type==='click') {
+      // Clean soft tick - very short sine blip
+      osc.type='sine';
+      osc.frequency.setValueAtTime(1200,now);
+      osc.frequency.exponentialRampToValueAtTime(800,now+0.025);
+      gain.gain.setValueAtTime(0.06,now);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+0.025);
+      osc.start(now); osc.stop(now+0.025);
+    } else if(type==='build') {
+      // Soft placement thud
+      var bbuf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.06),ctx.sampleRate);
+      var bd=bbuf.getChannelData(0);
+      for(var bi=0;bi<bd.length;bi++) bd[bi]=(Math.random()*2-1)*0.6*Math.exp(-bi/(ctx.sampleRate*0.012))+Math.sin(2*Math.PI*120*(bi/ctx.sampleRate))*0.4*Math.exp(-bi/(ctx.sampleRate*0.02));
+      var bsrc=ctx.createBufferSource(); var bgain=ctx.createGain();
+      bsrc.buffer=bbuf; bgain.gain.value=0.12;
+      bsrc.connect(bgain); bgain.connect(ctx.destination); bsrc.start(now);
+      osc.disconnect(); return;
+    } else if(type==='erase') {
+      osc.type='sawtooth';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(150, now+0.1);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now+0.1);
+      osc.start(now); osc.stop(now+0.1);
+    } else if(type==='feed') {
+      // Happy jingle
+      [523,659,784].forEach(function(freq,i){
+        var o2=ctx.createOscillator(); var g2=ctx.createGain();
+        o2.connect(g2); g2.connect(ctx.destination);
+        o2.frequency.value=freq;
+        g2.gain.setValueAtTime(0.15,now+i*0.1);
+        g2.gain.exponentialRampToValueAtTime(0.001,now+i*0.1+0.12);
+        o2.start(now+i*0.1); o2.stop(now+i*0.1+0.12);
+      });
+      return;
+    } else if(type==='play') {
+      [440,554,659,880].forEach(function(freq,i){
+        var o2=ctx.createOscillator(); var g2=ctx.createGain();
+        o2.connect(g2); g2.connect(ctx.destination);
+        o2.type='triangle'; o2.frequency.value=freq;
+        g2.gain.setValueAtTime(0.12,now+i*0.08);
+        g2.gain.exponentialRampToValueAtTime(0.001,now+i*0.08+0.1);
+        o2.start(now+i*0.08); o2.stop(now+i*0.08+0.1);
+      });
+      return;
+    } else if(type==='bath') {
+      // Bubbly sound
+      for(var i=0;i<6;i++){
+        var o3=ctx.createOscillator(); var g3=ctx.createGain();
+        o3.connect(g3); g3.connect(ctx.destination);
+        o3.frequency.value=400+Math.random()*400;
+        var t=now+i*0.05;
+        g3.gain.setValueAtTime(0.08,t); g3.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+        o3.start(t); o3.stop(t+0.06);
+      }
+      return;
+    } else if(type==='discover') {
+      [523,659,784,1047].forEach(function(freq,i){
+        var o2=ctx.createOscillator(); var g2=ctx.createGain();
+        o2.connect(g2); g2.connect(ctx.destination);
+        o2.type='triangle'; o2.frequency.value=freq;
+        g2.gain.setValueAtTime(0.2,now+i*0.12);
+        g2.gain.exponentialRampToValueAtTime(0.001,now+i*0.12+0.15);
+        o2.start(now+i*0.12); o2.stop(now+i*0.12+0.15);
+      });
+      return;
+    } else if(type==='place') {
+      osc.type='triangle';
+      osc.frequency.setValueAtTime(400,now);
+      osc.frequency.exponentialRampToValueAtTime(600,now+0.1);
+      gain.gain.setValueAtTime(0.15,now);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+0.12);
+      osc.start(now); osc.stop(now+0.12);
+    }
+  } catch(e){}
+}
+
+// Zone ambient music
+function playZoneAmbient(zoneId) {
+  stopAmbient();
+  var ctx = getAudioCtx(); if(!ctx) return;
+  try {
+    var freqs = {
+      jungle:     [261,329,392,523,659],
+      ocean:      [220,277,330,440,554],
+      savanna:    [293,369,440,587,740],
+      arctic:     [311,392,466,622,784],
+      rainforest: [246,311,370,493,622]
+    };
+    var zFreqs = freqs[zoneId] || freqs['jungle'];
+    var masterGain = ctx.createGain();
+    masterGain.gain.value = 0.06;
+    masterGain.connect(ctx.destination);
+    currentZoneAudio = {gain: masterGain, oscs: []};
+
+    zFreqs.forEach(function(freq, i){
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      // Gentle LFO for movement
+      var lfo = ctx.createOscillator();
+      var lfoGain = ctx.createGain();
+      lfo.frequency.value = 0.2 + i*0.05;
+      lfoGain.gain.value = freq * 0.02;
+      lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
+      g.gain.value = 0.3 + Math.random()*0.2;
+      osc.connect(g); g.connect(masterGain);
+      lfo.start(); osc.start();
+      currentZoneAudio.oscs.push(osc, lfo);
+    });
+  } catch(e){}
+}
+
+function stopAmbient() {
+  if(currentZoneAudio) {
+    try {
+      currentZoneAudio.gain.gain.setValueAtTime(currentZoneAudio.gain.gain.value, getAudioCtx().currentTime);
+      currentZoneAudio.gain.gain.exponentialRampToValueAtTime(0.001, getAudioCtx().currentTime+1);
+      currentZoneAudio.oscs.forEach(function(o){ try{o.stop(getAudioCtx().currentTime+1);}catch(e){} });
+    } catch(e){}
+    currentZoneAudio = null;
+  }
+}
+
+// Animal sounds via freesound-style synthesis
+function playAnimalSound(animal) {
+  var ctx = getAudioCtx(); if(!ctx) return;
+  var name = (animal.name||'').toLowerCase();
+  try {
+    // Generate characteristic sound based on animal type
+    var now = ctx.currentTime;
+    if(name.includes('frog')||name.includes('toad')) {
+      // Ribbit
+      for(var i=0;i<3;i++){
+        var o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='sawtooth'; o.frequency.setValueAtTime(180,now+i*0.15);
+        o.frequency.exponentialRampToValueAtTime(120,now+i*0.15+0.12);
+        g.gain.setValueAtTime(0.3,now+i*0.15); g.gain.exponentialRampToValueAtTime(0.001,now+i*0.15+0.13);
+        o.connect(g); g.connect(ctx.destination); o.start(now+i*0.15); o.stop(now+i*0.15+0.13);
+      }
+    } else if(name.includes('whale')||name.includes('dolphin')) {
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(300,now);
+      o.frequency.exponentialRampToValueAtTime(600,now+0.4);
+      o.frequency.exponentialRampToValueAtTime(400,now+0.8);
+      g.gain.setValueAtTime(0.3,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.9);
+      o.connect(g); g.connect(ctx.destination); o.start(now); o.stop(now+0.9);
+    } else if(name.includes('bird')||name.includes('parrot')||name.includes('toucan')||name.includes('owl')) {
+      [800,1000,800,1200].forEach(function(freq,i){
+        var o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='sine'; o.frequency.value=freq;
+        g.gain.setValueAtTime(0.2,now+i*0.12); g.gain.exponentialRampToValueAtTime(0.001,now+i*0.12+0.1);
+        o.connect(g); g.connect(ctx.destination); o.start(now+i*0.12); o.stop(now+i*0.12+0.1);
+      });
+    } else if(name.includes('elephant')) {
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sawtooth'; o.frequency.setValueAtTime(60,now);
+      o.frequency.exponentialRampToValueAtTime(120,now+0.3);
+      g.gain.setValueAtTime(0.4,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.5);
+      o.connect(g); g.connect(ctx.destination); o.start(now); o.stop(now+0.5);
+    } else if(name.includes('monkey')||name.includes('ape')) {
+      [400,600,400,800,400].forEach(function(freq,i){
+        var o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='sawtooth'; o.frequency.value=freq;
+        g.gain.setValueAtTime(0.2,now+i*0.1); g.gain.exponentialRampToValueAtTime(0.001,now+i*0.1+0.09);
+        o.connect(g); g.connect(ctx.destination); o.start(now+i*0.1); o.stop(now+i*0.1+0.09);
+      });
+    } else if(name.includes('cat')||name.includes('leopard')||name.includes('lion')) {
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sawtooth'; o.frequency.setValueAtTime(120,now);
+      o.frequency.exponentialRampToValueAtTime(80,now+0.4);
+      g.gain.setValueAtTime(0.3,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.5);
+      o.connect(g); g.connect(ctx.destination); o.start(now); o.stop(now+0.5);
+    } else {
+      // Generic cute animal sound
+      [600,800,700].forEach(function(freq,i){
+        var o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='triangle'; o.frequency.value=freq;
+        g.gain.setValueAtTime(0.2,now+i*0.1); g.gain.exponentialRampToValueAtTime(0.001,now+i*0.1+0.1);
+        o.connect(g); g.connect(ctx.destination); o.start(now+i*0.1); o.stop(now+i*0.1+0.1);
+      });
+    }
+  } catch(e){}
+}
+
+// Enable audio on first interaction
+function enableAudio() {
+  if(!audioEnabled) {
+    audioEnabled = true;
+    var ctx = getAudioCtx();
+    if(ctx && ctx.state==='suspended') ctx.resume();
+  }
+}
+document.addEventListener('touchstart', enableAudio, {once:true, passive:true});
+document.addEventListener('click', enableAudio, {once:true});
+document.addEventListener('mouseup', function(){ isPainting=false; });
+document.addEventListener('touchend', function(){ isPainting=false; });
+
+function leaveGame(){
+  if(roomListener){roomListener();roomListener=null;}
+  myRoom=null;myName='';myRole='';isHost=false;
+  document.getElementById('bottomNav').style.display='none';
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-home').classList.add('active');
+  document.getElementById('mainBg').className='bg bg-zoo';
+  showView('v-home');
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+document.getElementById('loadingScreen').style.display='none';
+document.getElementById('s-home').classList.add('active');
+initParticles('#00ff88');
+
+// ── RESUME SYSTEM ──
+function checkResume() {
+  var savedCode=localStorage.getItem('zoo_room_code');
+  var savedName=localStorage.getItem('zoo_my_name');
+  if(savedCode&&savedName) {
+    var el=document.getElementById('resumeSection');
+    if(el) { el.style.display='block'; document.getElementById('resumeInfo').textContent='Room '+savedCode+' • as '+savedName; }
+  }
+}
+checkResume();
+
+function resumeSession() {
+  var savedCode=localStorage.getItem('zoo_room_code');
+  var savedName=localStorage.getItem('zoo_my_name');
+  var savedRole=localStorage.getItem('zoo_my_role')||'hq';
+  if(!savedCode||!savedName){showView('v-choose');return;}
+  dbGet('zoo_rooms/'+savedCode,function(room){
+    if(!room){showToast('Room not found. Start a new game!');clearResume();return;}
+    myRoom=savedCode; myName=savedName; myRole=savedRole; isHost=(savedRole==='host');
+    if(room.started){
+      collection=room.animals||{}; zoo=room.zoo||{}; zoneSpotAnimals={};
+      document.getElementById('bottomNav').style.display='flex';
+      document.getElementById('s-home').classList.remove('active');
+      if(myRole==='hq'){
+        document.getElementById('nav-hq').style.display='flex';
+        navTo('hq'); updateHQ(room);
+        document.getElementById('hqRoomCode').textContent='ROOM '+myRoom;
+        lastFeedCount=Object.keys(collection).length;
+      } else {
+        document.getElementById('zoneRoomCode').textContent=myRoom;
+        document.getElementById('zooRoomCode2').textContent='ROOM '+myRoom;
+        setZone(0); navTo('zone');
+        renderZooBuilder(); renderCollectionGrid(); renderCollStrip();
+      }
+      startListen(savedCode);
+      showToast('🦁 Welcome back! Your zoo is right where you left it!');
+    } else {
+      document.getElementById('waitCode').textContent=savedCode;
+      showView('v-waiting'); startListen(savedCode);
+    }
+  });
+}
+
+function clearResume() {
+  localStorage.removeItem('zoo_room_code');
+  localStorage.removeItem('zoo_my_name');
+  localStorage.removeItem('zoo_my_role');
+  var el=document.getElementById('resumeSection');
+  if(el) el.style.display='none';
+}
+
+// Zone nav button in discover screen
+var zoneNavBtn=document.createElement('button');
+zoneNavBtn.style.cssText='position:fixed;bottom:74px;right:12px;background:rgba(255,204,0,.15);border:2px solid rgba(255,204,0,.4);border-radius:50px;padding:.5rem 1rem;font-family:Fredoka One,cursive;font-size:.8rem;color:#ffcc00;cursor:pointer;z-index:40;backdrop-filter:blur(8px);display:none;';
+zoneNavBtn.textContent='Next Zone →';
+zoneNavBtn.id='nextZoneBtn';
+zoneNavBtn.onclick=goNextZone;
+document.body.appendChild(zoneNavBtn);
+
+// Show/hide next zone button based on screen
+var origNavTo=navTo;
+navTo=function(name){
+  origNavTo(name);
+  document.getElementById('nextZoneBtn').style.display=name==='zone'?'block':'none';
+};
+</script>
+</body>
+</html>
