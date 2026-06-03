@@ -6,6 +6,10 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jaire Zoo">
+<meta name="mobile-web-app-capable" content="yes">
 <title>🦁 Jaire's Animal Discovery Zoo v2</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1847,10 +1851,10 @@ function driveLoop() {
     var scroll = document.getElementById('exploreScroll');
     if(scroll) scroll.style.transform = 'translateX(-'+exploreX+'px)';
 
-    // Update vehicle tilt
+    // Update vehicle tilt - emojis naturally face left, flip when going right
     var v = document.getElementById('exploreVehicleEl');
     if(v) {
-      var tilt = exploreDriving === 1 ? '' : exploreDriving === -1 ? 'scaleX(-1)' : '';
+      var tilt = exploreDriving === 1 ? 'scaleX(-1)' : '';
       v.style.transform = tilt;
       // Change vehicle based on zone
       var zoneIdx = Math.floor(exploreX / WORLD_ZONE_W);
@@ -1983,6 +1987,22 @@ var origNavTo=navTo;
 navTo=function(name){origNavTo(name);document.getElementById('nextZoneBtn').style.display=name==='zone'?'block':'none';};
 
 // Init
+// Detect iOS standalone mode - Firebase fetch can fail in some standalone configs
+// Show a gentle notice to open in Safari if issues occur
+var isStandalone = (window.navigator.standalone === true);
+if(isStandalone) {
+  // In standalone mode, test Firebase connection
+  setTimeout(function(){
+    if(!useFirebase) {
+      var banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#cc4400;color:#fff;padding:10px 14px;font-family:Fredoka One,cursive;font-size:.8rem;z-index:9999;text-align:center;';
+      banner.textContent = '⚠️ For best experience open in Safari, not the home screen app';
+      banner.onclick = function(){ this.remove(); };
+      document.body.appendChild(banner);
+    }
+  }, 3000);
+}
+
 document.getElementById('loadingScreen').style.display='none';
 document.getElementById('s-home').classList.add('active');
 initParticles('#00ff88');
