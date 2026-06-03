@@ -404,14 +404,14 @@ pb { display: block; padding-bottom: 70px; }
     <button class="zoo-tab" onclick="zooTab('explore')">🚙 Explore</button>
     <button class="zoo-tab" onclick="zooTab('collection')">🎒 Animals</button>
   </div>
-  <div class="zoo-content" id="zooContent" style="overflow:hidden;">
+  <div class="zoo-content" id="zooContent" style="overflow:hidden;padding:0;">
     <div id="zt-habitats">
       <div id="habitatsContainer"></div>
     </div>
     <div id="zt-build" style="display:none;">
       <div id="buildContainer"></div>
     </div>
-    <div id="zt-explore" style="display:none;margin:-1rem -1.2rem;">
+    <div id="zt-explore" style="display:none;margin:-0.5rem -1.2rem 0;">
       <div id="exploreContainer"></div>
     </div>
     <div id="zt-collection" style="display:none;">
@@ -1663,7 +1663,9 @@ function initExploreWorld() {
   container.innerHTML = '';
 
   // Figure out screen height for explore
-  var screenH = Math.min(window.innerHeight * 0.62, 340);
+  // Full height minus header (~110px for zoo header+tabs) and nav bar (70px)
+  var screenH = window.innerHeight - 180;
+  screenH = Math.max(screenH, 260);
   WORLD_H = screenH;
 
   var wrap = document.createElement('div');
@@ -1854,7 +1856,7 @@ function driveLoop() {
     // Update vehicle tilt - emojis naturally face left, flip when going right
     var v = document.getElementById('exploreVehicleEl');
     if(v) {
-      var tilt = exploreDriving === 1 ? 'scaleX(-1)' : '';
+      var tilt = exploreDriving === -1 ? 'scaleX(-1)' : 'scaleX(1)';
       v.style.transform = tilt;
       // Change vehicle based on zone
       var zoneIdx = Math.floor(exploreX / WORLD_ZONE_W);
