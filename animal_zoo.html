@@ -117,7 +117,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .zoo-tab{flex:1;padding:.6rem .3rem;border-radius:12px;border:none;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1);}
 .zoo-tab.active{background:rgba(125,222,58,.15);border-color:#7dde3a;color:#7dde3a;}
 .zoo-content{flex:1;overflow:visible;padding:0;}
-#zt-habitats,#zt-build,#zt-collection{overflow-y:auto;-webkit-overflow-scrolling:touch;height:calc(100vh - 190px);padding:0 1.2rem 80px;}
+#zt-habitats,#zt-build,#zt-collection{overflow-y:scroll;-webkit-overflow-scrolling:touch;height:calc(var(--vh,1vh)*100 - 190px);padding:0 1.2rem 80px;}
 #zt-explore{overflow:hidden;}
 
 /* HABITAT GRID */
@@ -407,11 +407,11 @@ pb { display: block; padding-bottom: 70px; }
     <button class="zoo-tab" onclick="zooTab('explore')">🚙 Explore</button>
     <button class="zoo-tab" onclick="zooTab('collection')">🎒 Animals</button>
   </div>
-  <div class="zoo-content" id="zooContent" style="padding:0;overflow:visible;">
-    <div id="zt-habitats" style="padding:0 0 80px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div class="zoo-content" id="zooContent">
+    <div id="zt-habitats">
       <div id="habitatsContainer"></div>
     </div>
-    <div id="zt-build" style="display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px;">
+    <div id="zt-build" style="display:none;">
       <div id="buildContainer"></div>
     </div>
     <div id="zt-explore" style="display:none;margin:-0.5rem -1.2rem 0;">
@@ -1745,7 +1745,11 @@ function initExploreWorld() {
   var groundPct = 0.31;
   vehicle.style.cssText = 'left:40px;bottom:'+(WORLD_H*groundPct+10)+'px;font-size:2.4rem;line-height:1;';
   // Use a car that faces right by default
-  vehicle.innerHTML = '<span id="vehicleEmoji" style="display:inline-block;transform:scaleX(-1);">🚙</span>';
+  var vSpan = document.createElement('span');
+  vSpan.id = 'vehicleEmoji';
+  vSpan.textContent = '🚙';
+  vSpan.style.cssText = 'display:inline-block;transform:scaleX(-1);';
+  vehicle.appendChild(vSpan);
   wrap.appendChild(vehicle);
 
   // Minimap
@@ -1996,6 +2000,14 @@ document.body.appendChild(zoneNavBtn);
 
 var origNavTo=navTo;
 navTo=function(name){origNavTo(name);document.getElementById('nextZoneBtn').style.display=name==='zone'?'block':'none';};
+
+// Set real viewport height for iOS Safari
+function setVH() {
+  var vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', vh+'px');
+}
+setVH();
+window.addEventListener('resize', setVH);
 
 // Init
 // Detect iOS standalone mode - Firebase fetch can fail in some standalone configs
