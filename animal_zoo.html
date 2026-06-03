@@ -116,7 +116,9 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .zoo-tabs{display:flex;gap:6px;padding:.5rem 1.2rem;flex-shrink:0;}
 .zoo-tab{flex:1;padding:.6rem .3rem;border-radius:12px;border:none;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1);}
 .zoo-tab.active{background:rgba(125,222,58,.15);border-color:#7dde3a;color:#7dde3a;}
-.zoo-content{flex:1;overflow-y:auto;padding:0 1.2rem 1.2rem;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.zoo-content{flex:1;overflow:visible;padding:0;}
+#zt-habitats,#zt-build,#zt-collection{overflow-y:auto;-webkit-overflow-scrolling:touch;height:calc(100vh - 190px);padding:0 1.2rem 80px;}
+#zt-explore{overflow:hidden;}
 
 /* HABITAT GRID */
 .habitat-section{margin-bottom:1.5rem;}
@@ -405,11 +407,11 @@ pb { display: block; padding-bottom: 70px; }
     <button class="zoo-tab" onclick="zooTab('explore')">🚙 Explore</button>
     <button class="zoo-tab" onclick="zooTab('collection')">🎒 Animals</button>
   </div>
-  <div class="zoo-content" id="zooContent">
-    <div id="zt-habitats">
+  <div class="zoo-content" id="zooContent" style="padding:0;overflow:visible;">
+    <div id="zt-habitats" style="padding:0 0 80px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;">
       <div id="habitatsContainer"></div>
     </div>
-    <div id="zt-build" style="display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 180px);padding-bottom:80px;">
+    <div id="zt-build" style="display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px;">
       <div id="buildContainer"></div>
     </div>
     <div id="zt-explore" style="display:none;margin:-0.5rem -1.2rem 0;">
@@ -1741,8 +1743,9 @@ function initExploreWorld() {
   vehicle.className = 'vehicle';
   vehicle.id = 'exploreVehicleEl';
   var groundPct = 0.31;
-  vehicle.style.cssText = 'left:40px;bottom:'+(WORLD_H*groundPct+10)+'px;';
-  vehicle.textContent = '🚙';
+  vehicle.style.cssText = 'left:40px;bottom:'+(WORLD_H*groundPct+10)+'px;font-size:2.4rem;line-height:1;';
+  // Use a car that faces right by default
+  vehicle.innerHTML = '<span id="vehicleEmoji" style="display:inline-block;transform:scaleX(-1);">🚙</span>';
   wrap.appendChild(vehicle);
 
   // Minimap
@@ -1857,13 +1860,17 @@ function driveLoop() {
     // Update vehicle tilt - emojis naturally face left, flip when going right
     var v = document.getElementById('exploreVehicleEl');
     if(v) {
-      // Emojis face left by default, so flip to face right always except when driving left
-      var tilt = exploreDriving === -1 ? 'scaleX(1)' : 'scaleX(-1)';
-      v.style.transform = tilt;
+      // Update vehicle emoji and direction
+      var ve = document.getElementById('vehicleEmoji');
+      if(ve) {
+        // scaleX(-1) flips emoji to face right (default), scaleX(1) faces left
+        ve.style.transform = exploreDriving === -1 ? 'scaleX(1)' : 'scaleX(-1)';
+      }
       // Change vehicle based on zone
       var zoneIdx = Math.floor(exploreX / WORLD_ZONE_W);
       var zoneDef = ZONE_DEFS[Math.min(zoneIdx, ZONE_DEFS.length-1)];
-      v.textContent = zoneDef.vehicle;
+      var ve2 = document.getElementById('vehicleEmoji');
+      if(ve2) ve2.textContent = zoneDef.vehicle;
       // Update minimap
       var mm = document.getElementById('exploreMinimap');
       if(mm) mm.textContent = zoneDef.label;
