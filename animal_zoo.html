@@ -218,6 +218,41 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 
 pb { display: block; padding-bottom: 70px; }
 
+/* ══ EXPLORE WORLD ══ */
+.explore-wrap{position:relative;overflow:hidden;background:#0a0a0a;}
+.explore-sky{position:absolute;top:0;left:0;height:45%;width:100%;pointer-events:none;}
+.explore-ground{position:absolute;bottom:0;left:0;right:0;height:30%;pointer-events:none;}
+.explore-scroll{position:absolute;top:0;left:0;height:100%;will-change:transform;transition:none;}
+.habitat-zone{position:absolute;top:0;height:100%;display:flex;flex-direction:column;}
+.zone-label-e{position:absolute;top:6px;left:50%;transform:translateX(-50%);font-family:'Fredoka One',cursive;font-size:.75rem;color:rgba(255,255,255,.5);white-space:nowrap;pointer-events:none;background:rgba(0,0,0,.3);padding:2px 8px;border-radius:10px;}
+/* Vehicle */
+.vehicle{position:absolute;font-size:2.4rem;pointer-events:none;transition:transform .15s;z-index:20;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));}
+/* Animals in world */
+.world-animal{position:absolute;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;z-index:10;animation:anim-idle 3s ease-in-out infinite;}
+.world-animal:active{transform:scale(1.2);}
+.world-animal img{border-radius:50%;border:2px solid rgba(255,255,255,.3);object-fit:cover;}
+.world-animal-name{font-family:'Fredoka One',cursive;font-size:.5rem;color:rgba(255,255,255,.7);background:rgba(0,0,0,.4);padding:1px 5px;border-radius:8px;white-space:nowrap;}
+@keyframes anim-idle{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
+/* Controls */
+.explore-controls{position:absolute;bottom:0;left:0;right:0;height:90px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:linear-gradient(transparent,rgba(0,0,0,.5));z-index:30;}
+.ctrl-btn{width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;font-size:1.6rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.5);transition:transform .1s;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
+.ctrl-btn:active{transform:scale(.88);}
+.ctrl-left{background:rgba(255,255,255,.15);backdrop-filter:blur(4px);}
+.ctrl-right{background:rgba(255,255,255,.15);backdrop-filter:blur(4px);}
+.ctrl-honk{background:linear-gradient(135deg,#ffcc00,#ff9900);color:#1a0a00;font-size:1.4rem;}
+.ctrl-treat{background:linear-gradient(135deg,#7dde3a,#3a9a10);font-size:1.4rem;}
+.ctrl-center{display:flex;gap:10px;}
+/* Mini map */
+.explore-minimap{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:4px 8px;z-index:30;font-family:'Fredoka One',cursive;font-size:.65rem;color:rgba(255,255,255,.7);}
+/* Food throw */
+.food-throw{position:absolute;font-size:1.2rem;z-index:25;pointer-events:none;animation:throw-arc .6s ease-out forwards;}
+@keyframes throw-arc{0%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,-40px) scale(1.2)}100%{transform:translate(120px,20px) scale(.5);opacity:0}}
+/* reaction bubble */
+.react-bubble{position:absolute;background:rgba(0,0,0,.7);border:1.5px solid rgba(255,255,255,.3);border-radius:16px;padding:4px 10px;font-family:'Fredoka One',cursive;font-size:.75rem;color:#ffcc00;white-space:nowrap;z-index:25;pointer-events:none;animation:bubble-pop .5s ease forwards;}
+@keyframes bubble-pop{0%{transform:scale(0) translateY(0);opacity:1}70%{transform:scale(1.1) translateY(-10px);opacity:1}100%{transform:scale(1) translateY(-20px);opacity:0}}
+/* Zone divider */
+.zone-divider{position:absolute;top:0;width:4px;height:100%;opacity:.4;pointer-events:none;}
+
 /* BUILD TAB */
 .build-canvas-wrap{position:relative;border-radius:18px;overflow:hidden;border:2px solid rgba(125,222,58,.3);margin-bottom:12px;touch-action:none;}
 .build-canvas{display:grid;gap:2px;padding:6px;background:rgba(0,0,0,.3);}
@@ -362,14 +397,18 @@ pb { display: block; padding-bottom: 70px; }
   <div class="zoo-tabs">
     <button class="zoo-tab active" onclick="zooTab('habitats')">🎮 Playtime</button>
     <button class="zoo-tab" onclick="zooTab('build')">🏗️ Build</button>
+    <button class="zoo-tab" onclick="zooTab('explore')">🚙 Explore</button>
     <button class="zoo-tab" onclick="zooTab('collection')">🎒 Animals</button>
   </div>
-  <div class="zoo-content" id="zooContent">
+  <div class="zoo-content" id="zooContent" style="overflow:hidden;">
     <div id="zt-habitats">
       <div id="habitatsContainer"></div>
     </div>
     <div id="zt-build" style="display:none;">
       <div id="buildContainer"></div>
+    </div>
+    <div id="zt-explore" style="display:none;margin:-1rem -1.2rem;">
+      <div id="exploreContainer"></div>
     </div>
     <div id="zt-collection" style="display:none;">
       <div class="coll-grid" id="collGrid"></div>
@@ -1573,14 +1612,313 @@ function navTo(name){
 function stopAmbient(){if(currentZoneAudio){try{var ctx=getAudioCtx();currentZoneAudio.gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1);currentZoneAudio.oscs.forEach(function(o){try{o.stop(ctx.currentTime+1);}catch(e){}});}catch(e){}currentZoneAudio=null;}}
 
 function zooTab(name){
-  ['habitats','build','collection'].forEach(function(t){document.getElementById('zt-'+t).style.display=t===name?'block':'none';});
-  document.querySelectorAll('.zoo-tab').forEach(function(t,i){t.classList.toggle('active',['habitats','build','collection'][i]===name);});
-  if(name==='build')renderBuildTab();
+  ['habitats','build','explore','collection'].forEach(function(t){document.getElementById('zt-'+t).style.display=t===name?'block':'none';});
+  document.querySelectorAll('.zoo-tab').forEach(function(t,i){t.classList.toggle('active',['habitats','build','explore','collection'][i]===name);});
+  if(name==='build') renderBuildTab();
+  if(name==='explore') initExploreWorld();
 }
-function hqTab2(name){
   ['feed','zoo','team'].forEach(function(t){document.getElementById('hq-'+t).style.display=t===name?'block':'none';});
   document.querySelectorAll('.hq-tab').forEach(function(t,i){t.classList.toggle('active',['feed','zoo','team'][i]===name);});
   if(name==='zoo')renderHQZoo();
+}
+
+
+// ═══════════════════════════════════════════
+//  EXPLORE WORLD
+// ═══════════════════════════════════════════
+var exploreX = 0;
+var exploreDriving = 0; // -1 left, 0 still, 1 right
+var exploreVehicle = '🚙';
+var exploreAF = null;
+var exploreLastHonk = 0;
+var WORLD_ZONE_W = 420; // width per habitat zone
+var WORLD_TOTAL_W = WORLD_ZONE_W * 5;
+var WORLD_H = 320;
+var EXPLORE_SPEED = 3.5;
+
+var ZONE_DEFS = [
+  {id:'jungle',     label:'🌿 Jungle',      sky:'linear-gradient(180deg,#051a04 0%,#0a2a08 100%)',   ground:'#0d2808', groundTop:'#1a4010', divider:'#7dde3a', vehicle:'🚙'},
+  {id:'ocean',      label:'🌊 Ocean',       sky:'linear-gradient(180deg,#020818 0%,#041428 100%)',   ground:'#041828', groundTop:'#062040', divider:'#4ab8d4', vehicle:'🚤'},
+  {id:'savanna',    label:'🌾 Savanna',     sky:'linear-gradient(180deg,#1a0800 0%,#2a1200 100%)',   ground:'#1a0e00', groundTop:'#2a1800', divider:'#ffcc00', vehicle:'🚙'},
+  {id:'arctic',     label:'❄️ Arctic',      sky:'linear-gradient(180deg,#04080e 0%,#0a1020 100%)',   ground:'#0a1420', groundTop:'#162030', divider:'#aaddff', vehicle:'🛷'},
+  {id:'rainforest', label:'🌺 Rainforest',  sky:'linear-gradient(180deg,#030e04 0%,#081808 100%)',   ground:'#061208', groundTop:'#0e2810', divider:'#88ff44', vehicle:'🚙'}
+];
+
+// Background scene elements per zone
+var ZONE_SCENERY = {
+  jungle:     ['🌴','🌿','🌳','🎋','🌱','🌿','🌴','🌳','🌿','🎋'],
+  ocean:      ['🪸','🌿','🐚','🫧','🪸','🌿','🐚','🫧','🪸','🌿'],
+  savanna:    ['🌾','🌵','🪨','🌾','🌳','🌾','🪨','🌵','🌾','🌳'],
+  arctic:     ['❄️','🧊','🏔️','❄️','🪨','🧊','❄️','🏔️','🪨','❄️'],
+  rainforest: ['🌺','🍄','🌿','🌴','🌸','🎋','🌿','🌺','🍄','🌸']
+};
+
+function initExploreWorld() {
+  var container = document.getElementById('exploreContainer');
+  container.innerHTML = '';
+
+  // Figure out screen height for explore
+  var screenH = Math.min(window.innerHeight * 0.62, 340);
+  WORLD_H = screenH;
+
+  var wrap = document.createElement('div');
+  wrap.className = 'explore-wrap';
+  wrap.id = 'exploreWrap';
+  wrap.style.cssText = 'width:100%;height:'+WORLD_H+'px;position:relative;overflow:hidden;';
+
+  // Scrolling world
+  var scroll = document.createElement('div');
+  scroll.className = 'explore-scroll';
+  scroll.id = 'exploreScroll';
+  scroll.style.cssText = 'width:'+WORLD_TOTAL_W+'px;height:'+WORLD_H+'px;position:absolute;top:0;left:0;';
+
+  // Build each zone
+  ZONE_DEFS.forEach(function(zone, zi) {
+    var zoneEl = document.createElement('div');
+    zoneEl.style.cssText = 'position:absolute;top:0;left:'+(zi*WORLD_ZONE_W)+'px;width:'+WORLD_ZONE_W+'px;height:'+WORLD_H+'px;overflow:hidden;';
+
+    // Sky
+    var sky = document.createElement('div');
+    sky.style.cssText = 'position:absolute;top:0;left:0;right:0;height:70%;background:'+zone.sky+';';
+    zoneEl.appendChild(sky);
+
+    // Ground
+    var ground = document.createElement('div');
+    ground.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:32%;background:'+zone.ground+';';
+    zoneEl.appendChild(ground);
+    var groundTop = document.createElement('div');
+    groundTop.style.cssText = 'position:absolute;bottom:30%;left:0;right:0;height:6%;background:'+zone.groundTop+';border-radius:40% 40% 0 0;';
+    zoneEl.appendChild(groundTop);
+
+    // Scenery items (background)
+    var scenery = ZONE_SCENERY[zone.id] || ZONE_SCENERY['jungle'];
+    scenery.forEach(function(item, i) {
+      var el = document.createElement('div');
+      var size = 1.4 + Math.random() * 1.2;
+      var x = 10 + (i / scenery.length) * 380 + Math.random() * 20;
+      var bottom = 28 + Math.random() * 18;
+      el.style.cssText = 'position:absolute;font-size:'+size+'rem;left:'+x+'px;bottom:'+bottom+'%;opacity:'+(0.5+Math.random()*0.4)+';pointer-events:none;';
+      el.textContent = item;
+      zoneEl.appendChild(el);
+    });
+
+    // Zone label
+    var lbl = document.createElement('div');
+    lbl.className = 'zone-label-e';
+    lbl.textContent = zone.label;
+    zoneEl.appendChild(lbl);
+
+    // Zone divider (right edge)
+    if(zi < 4) {
+      var div = document.createElement('div');
+      div.className = 'zone-divider';
+      div.style.cssText = 'position:absolute;top:0;right:0;width:3px;height:100%;background:'+zone.divider+';opacity:.5;pointer-events:none;';
+      zoneEl.appendChild(div);
+    }
+
+    // Place animals from collection that belong here
+    var zoneAnimals = Object.values(collection).filter(function(a){ return a.inZoo && a.zoneId === zone.id; });
+    // Also add any undiscovered zone flavor animals as silhouettes
+    zoneAnimals.forEach(function(animal, ai) {
+      placeWorldAnimal(zoneEl, animal, zi, ai, zoneAnimals.length, WORLD_H);
+    });
+
+    scroll.appendChild(zoneEl);
+  });
+
+  wrap.appendChild(scroll);
+
+  // Vehicle
+  var vehicle = document.createElement('div');
+  vehicle.className = 'vehicle';
+  vehicle.id = 'exploreVehicleEl';
+  var groundPct = 0.31;
+  vehicle.style.cssText = 'left:40px;bottom:'+(WORLD_H*groundPct+10)+'px;';
+  vehicle.textContent = '🚙';
+  wrap.appendChild(vehicle);
+
+  // Minimap
+  var minimap = document.createElement('div');
+  minimap.className = 'explore-minimap';
+  minimap.id = 'exploreMinimap';
+  minimap.textContent = '🌿 Jungle';
+  wrap.appendChild(minimap);
+
+  // Controls
+  var controls = document.createElement('div');
+  controls.className = 'explore-controls';
+
+  var leftBtn = document.createElement('button');
+  leftBtn.className = 'ctrl-btn ctrl-left';
+  leftBtn.innerHTML = '◀';
+  leftBtn.addEventListener('touchstart', function(e){e.preventDefault();exploreDriving=-1;},{passive:false});
+  leftBtn.addEventListener('touchend', function(){exploreDriving=0;},{passive:true});
+  leftBtn.addEventListener('mousedown', function(){exploreDriving=-1;});
+  leftBtn.addEventListener('mouseup', function(){exploreDriving=0;});
+
+  var centerDiv = document.createElement('div');
+  centerDiv.className = 'ctrl-center';
+
+  var honkBtn = document.createElement('button');
+  honkBtn.className = 'ctrl-btn ctrl-honk';
+  honkBtn.innerHTML = '📯';
+  honkBtn.addEventListener('click', honkHorn);
+
+  var treatBtn = document.createElement('button');
+  treatBtn.className = 'ctrl-btn ctrl-treat';
+  treatBtn.innerHTML = '🍖';
+  treatBtn.addEventListener('click', throwTreat);
+
+  centerDiv.appendChild(honkBtn);
+  centerDiv.appendChild(treatBtn);
+
+  var rightBtn = document.createElement('button');
+  rightBtn.className = 'ctrl-btn ctrl-right';
+  rightBtn.innerHTML = '▶';
+  rightBtn.addEventListener('touchstart', function(e){e.preventDefault();exploreDriving=1;},{passive:false});
+  rightBtn.addEventListener('touchend', function(){exploreDriving=0;},{passive:true});
+  rightBtn.addEventListener('mousedown', function(){exploreDriving=1;});
+  rightBtn.addEventListener('mouseup', function(){exploreDriving=0;});
+
+  controls.appendChild(leftBtn);
+  controls.appendChild(centerDiv);
+  controls.appendChild(rightBtn);
+  wrap.appendChild(controls);
+
+  container.appendChild(wrap);
+
+  // Start drive loop
+  exploreX = 0;
+  if(exploreAF) cancelAnimationFrame(exploreAF);
+  driveLoop();
+}
+
+function placeWorldAnimal(zoneEl, animal, zi, ai, total, worldH) {
+  var el = document.createElement('div');
+  el.className = 'world-animal';
+  var spacing = WORLD_ZONE_W / (total + 1);
+  var x = spacing * (ai + 1) - 30 + (Math.random() * 30 - 15);
+  var bottomPx = worldH * 0.28 + Math.random() * (worldH * 0.08);
+  var size = 44 + Math.floor(Math.random() * 16);
+  el.style.cssText = 'left:'+x+'px;bottom:'+bottomPx+'px;animation-delay:'+(Math.random()*2)+'s;';
+  el.style.animationDuration = (2.5 + Math.random() * 2) + 's';
+
+  // Photo or emoji
+  if(animal.imageUrl) {
+    var img = document.createElement('img');
+    img.src = animal.imageUrl;
+    img.alt = animal.name;
+    img.style.cssText = 'width:'+size+'px;height:'+size+'px;border-radius:50%;border:2.5px solid rgba(255,255,255,.4);object-fit:cover;pointer-events:none;-webkit-user-drag:none;-webkit-touch-callout:none;';
+    el.appendChild(img);
+  } else {
+    var emojiEl = document.createElement('span');
+    emojiEl.textContent = animal.emoji;
+    emojiEl.style.cssText = 'font-size:'+(size*0.04)+'rem;line-height:1;';
+    el.appendChild(emojiEl);
+  }
+
+  var nameEl = document.createElement('div');
+  nameEl.className = 'world-animal-name';
+  nameEl.textContent = animal.name;
+  el.appendChild(nameEl);
+
+  // Tap to interact
+  el.addEventListener('click', function(e) {
+    e.stopPropagation();
+    playAnimalSound(animal);
+    showReaction(el, ['😊','🎉','💚','⭐','🥰'][Math.floor(Math.random()*5)] + ' ' + animal.name + '!');
+  });
+
+  zoneEl.appendChild(el);
+}
+
+function driveLoop() {
+  if(document.getElementById('zt-explore') && document.getElementById('zt-explore').style.display !== 'none') {
+    // Move
+    if(exploreDriving !== 0) {
+      exploreX += exploreDriving * EXPLORE_SPEED;
+      // Clamp
+      var maxX = WORLD_TOTAL_W - window.innerWidth;
+      exploreX = Math.max(0, Math.min(exploreX, maxX));
+    }
+
+    // Apply scroll
+    var scroll = document.getElementById('exploreScroll');
+    if(scroll) scroll.style.transform = 'translateX(-'+exploreX+'px)';
+
+    // Update vehicle tilt
+    var v = document.getElementById('exploreVehicleEl');
+    if(v) {
+      var tilt = exploreDriving === 1 ? '' : exploreDriving === -1 ? 'scaleX(-1)' : '';
+      v.style.transform = tilt;
+      // Change vehicle based on zone
+      var zoneIdx = Math.floor(exploreX / WORLD_ZONE_W);
+      var zoneDef = ZONE_DEFS[Math.min(zoneIdx, ZONE_DEFS.length-1)];
+      v.textContent = zoneDef.vehicle;
+      // Update minimap
+      var mm = document.getElementById('exploreMinimap');
+      if(mm) mm.textContent = zoneDef.label;
+    }
+
+    exploreAF = requestAnimationFrame(driveLoop);
+  } else {
+    exploreAF = null;
+    exploreDriving = 0;
+  }
+}
+
+function honkHorn() {
+  var now = Date.now();
+  if(now - exploreLastHonk < 800) return;
+  exploreLastHonk = now;
+  // Play honk sound
+  var ctx = getAudioCtx(); if(!ctx) return;
+  try {
+    var now2 = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(440, now2);
+    osc.frequency.setValueAtTime(380, now2+0.08);
+    gain.gain.setValueAtTime(0.3, now2);
+    gain.gain.exponentialRampToValueAtTime(0.001, now2+0.25);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(now2); osc.stop(now2+0.25);
+  } catch(e){}
+  // React nearby animals
+  var nearbyAnimals = document.querySelectorAll('#exploreScroll .world-animal');
+  var vx = exploreX + 80;
+  nearbyAnimals.forEach(function(el) {
+    var rect = el.getBoundingClientRect();
+    var elX = parseFloat(el.style.left) + Math.floor(exploreX / WORLD_ZONE_W) * WORLD_ZONE_W;
+    if(Math.abs(elX - vx) < 120) {
+      el.style.animationDuration = '0.3s';
+      setTimeout(function(){ el.style.animationDuration = ''; }, 800);
+    }
+  });
+  showToast('📯 Beep beep!');
+}
+
+function throwTreat() {
+  var wrap = document.getElementById('exploreWrap');
+  if(!wrap) return;
+  var treat = document.createElement('div');
+  treat.className = 'food-throw';
+  treat.style.cssText = 'left:90px;bottom:120px;';
+  treat.textContent = ['🍖','🥩','🍎','🐟','🌿'][Math.floor(Math.random()*5)];
+  wrap.appendChild(treat);
+  setTimeout(function(){ if(treat.parentNode) treat.parentNode.removeChild(treat); }, 700);
+  playSound('feed');
+  showToast('🍖 Treat thrown!');
+}
+
+function showReaction(parentEl, text) {
+  var bubble = document.createElement('div');
+  bubble.className = 'react-bubble';
+  bubble.textContent = text;
+  bubble.style.cssText = 'bottom:60px;left:50%;transform:translateX(-50%);';
+  parentEl.appendChild(bubble);
+  setTimeout(function(){ if(bubble.parentNode) bubble.parentNode.removeChild(bubble); }, 1200);
 }
 
 function leaveGame(){
